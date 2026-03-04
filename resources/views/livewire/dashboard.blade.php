@@ -62,8 +62,34 @@
 
     {{-- Filters row (hidden on Share Links / Connections tabs) --}}
     @if ($view !== 'sharing' && $view !== 'connections')
-    <div class="flex flex-wrap items-center gap-2 mb-3">
-        {{-- Connection selector --}}
+    <div class="flex items-center justify-between gap-2 mb-3">
+        <div class="flex items-center gap-2">
+            {{-- Preset selector --}}
+            <select wire:model.live="preset"
+                    class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">Quick select…</option>
+                <option value="this_week">This week</option>
+                <option value="last_week">Last week</option>
+                <option value="this_month">This month</option>
+                <option value="last_month">Last month</option>
+                <option value="last_7">Last 7 days</option>
+                <option value="last_30">Last 30 days</option>
+                <option value="last_90">Last 90 days</option>
+                <option value="this_year">This year</option>
+                <option value="last_year">Last year</option>
+                <option value="this_quarter">This quarter</option>
+                <option value="last_quarter">Last quarter</option>
+            </select>
+
+            {{-- Date range --}}
+            <input type="date" wire:model.live="from"
+                   class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <span class="text-gray-400 text-sm">to</span>
+            <input type="date" wire:model.live="to"
+                   class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        {{-- Connection selector on the right --}}
         @if ($lockedConnection === null && $connections->count() > 1)
             <select wire:model.live="connection"
                     class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -72,30 +98,6 @@
                 @endforeach
             </select>
         @endif
-
-        {{-- Preset selector --}}
-        <select wire:model.live="preset"
-                class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <option value="">Quick select…</option>
-            <option value="this_week">This week</option>
-            <option value="last_week">Last week</option>
-            <option value="this_month">This month</option>
-            <option value="last_month">Last month</option>
-            <option value="last_7">Last 7 days</option>
-            <option value="last_30">Last 30 days</option>
-            <option value="last_90">Last 90 days</option>
-            <option value="this_year">This year</option>
-            <option value="last_year">Last year</option>
-            <option value="this_quarter">This quarter</option>
-            <option value="last_quarter">Last quarter</option>
-        </select>
-
-        {{-- Date range --}}
-        <input type="date" wire:model.live="from"
-               class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        <span class="text-gray-400 text-sm">to</span>
-        <input type="date" wire:model.live="to"
-               class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
     </div>
 
     {{-- View tabs (only shown when there is more than one tab to choose from) --}}
