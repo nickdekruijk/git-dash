@@ -15,6 +15,7 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    'dashboard_password' => env('DASHBOARD_PASSWORD'),
     /*
     |--------------------------------------------------------------------------
     | Application Environment

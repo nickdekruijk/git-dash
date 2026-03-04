@@ -6,6 +6,8 @@ use Carbon\Carbon;
 use Github\ResultPager;
 use GrahamCampbell\GitHub\Facades\GitHub;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use App\Models\ShareToken;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -25,10 +27,22 @@ class Dashboard extends Component
     public string $view = 'timeline';
     public string $preset = '';
 
-    public function mount(): void
+    /** When set, the user can only view this connection (share link mode). */
+    public ?string $lockedConnection = null;
+
+    /** New token form fields */
+    public string $newTokenLabel = '';
+    public string $newTokenConnection = 'main';
+
+    public function mount(?string $lockedConnection = null): void
     {
         $this->from = now()->subDays(30)->toDateString();
         $this->to = now()->toDateString();
+
+        if ($lockedConnection !== null) {
+            $this->lockedConnection = $lockedConnection;
+            $this->connection = $lockedConnection;
+        }
     }
 
     /** When a preset is chosen, calculate and apply the corresponding date range. */
@@ -55,6 +69,40 @@ class Dashboard extends Component
 
     /** Explicit re-fetch triggered by the Filter button (syncs deferred wire:model values). */
     public function filter(): void {}
+
+    /** Prevent changing connection when in share/locked mode. */
+    public function updatedConnection(): void
+    {
+        if ($this->lockedConnection !== null) {
+            $this->connection = $this->lockedConnection;
+        }
+    }
+
+    /** Generate a new share token. */
+    public function createToken(): void
+    {
+        ShareToken::create([
+            'token'      => Str::random(32),
+            'connection' => $this->newTokenConnection,
+            'label'      => $this->newTokenLabel ?: null,
+        ]);
+
+        $this->newTokenLabel = '';
+        unset($this->shareTokens); // bust computed cache
+    }
+
+    /** Delete a share token by id. */
+    public function deleteToken(int $id): void
+    {
+        ShareToken::destroy($id);
+        unset($this->shareTokens);
+    }
+
+    #[Computed]
+    public function shareTokens(): Collection
+    {
+        return ShareToken::orderByDesc('created_at')->get();
+    }
 
     #[Computed]
     public function connections(): Collection
@@ -134,13 +182,14 @@ class Dashboard extends Component
     public function render(): \Illuminate\View\View
     {
         return view('livewire.dashboard', [
-            'commitsByDate' => $this->commitsByDate,
-            'timeByRepo'    => $this->timeByRepo,
-            'totalCommits'  => $this->totalCommits,
-            'totalRepos'    => $this->totalRepos,
-            'totalMinutes'  => $this->totalMinutes,
-            'username'      => $this->username,
-            'connections'   => $this->connections,
+            'commitsByDate'  => $this->commitsByDate,
+            'timeByRepo'     => $this->timeByRepo,
+            'totalCommits'   => $this->totalCommits,
+            'totalRepos'     => $this->totalRepos,
+            'totalMinutes'   => $this->totalMinutes,
+            'username'       => $this->username,
+            'connections'    => $this->connections,
+            'shareTokens'    => $this->lockedConnection === null ? $this->shareTokens : collect(),
         ]);
     }
 

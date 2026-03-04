@@ -11,6 +11,7 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
+            @if ($lockedConnection === null)
             {{-- Connection selector --}}
             @if ($connections->count() > 1)
                 <select wire:model.live="connection"
@@ -51,6 +52,35 @@
                 <span wire:loading.remove wire:target="filter">Filter</span>
                 <span wire:loading wire:target="filter">Loading…</span>
             </button>
+            @else
+            {{-- Share mode: read-only badge --}}
+            <span class="text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-full px-3 py-1">
+                Shared view · {{ $lockedConnection }}
+            </span>
+
+            {{-- Date controls still work in share mode --}}
+            <input type="date" wire:model="from"
+                   class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <span class="text-gray-400 text-sm">to</span>
+            <input type="date" wire:model="to"
+                   class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <button wire:click="filter"
+                    wire:loading.attr="disabled"
+                    class="rounded-md bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-1.5 text-sm font-medium transition-colors">
+                <span wire:loading.remove wire:target="filter">Filter</span>
+                <span wire:loading wire:target="filter">Loading…</span>
+            </button>
+            @endif
+
+            @if ($lockedConnection === null)
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit"
+                        class="rounded-md border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 px-3 py-1.5 text-sm transition-colors">
+                    Sign out
+                </button>
+            </form>
+            @endif
         </div>
     </div>
 </header>
@@ -255,6 +285,71 @@
             </div>
         @endforelse
 
+    @endif
+
+    {{-- ── Share Token Management (owner only) ── --}}
+    @if ($lockedConnection === null)
+    <div class="mt-12 border-t border-gray-200 dark:border-gray-800 pt-8">
+        <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Share Links</h2>
+
+        {{-- Create new token --}}
+        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 mb-4">
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Generate a link to share a read-only view of a specific connection.</p>
+            <div class="flex flex-wrap items-end gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Label (optional)</label>
+                    <input type="text" wire:model="newTokenLabel" placeholder="e.g. John's view"
+                           class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-48">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Connection</label>
+                    <select wire:model="newTokenConnection"
+                            class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        @foreach ($connections as $conn)
+                            <option value="{{ $conn }}">{{ $conn }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <button wire:click="createToken"
+                        class="rounded-md bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 text-sm font-medium transition-colors">
+                    Generate link
+                </button>
+            </div>
+        </div>
+
+        {{-- Token list --}}
+        @if ($shareTokens->isEmpty())
+            <p class="text-sm text-gray-400 dark:text-gray-500">No share links yet.</p>
+        @else
+            <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
+                @foreach ($shareTokens as $st)
+                    <div class="px-4 py-3 flex items-center gap-4">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                @if ($st->label)
+                                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ $st->label }}</span>
+                                    <span class="text-xs text-gray-400">·</span>
+                                @endif
+                                <span class="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded px-1.5 py-0.5">{{ $st->connection }}</span>
+                            </div>
+                            <div class="flex items-center gap-2 mt-1">
+                                <input type="text" readonly
+                                       value="{{ url('/s/' . $st->token) }}"
+                                       onclick="this.select()"
+                                       class="text-xs font-mono text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-2 py-0.5 w-full max-w-md cursor-text">
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-400 shrink-0">{{ $st->created_at->diffForHumans() }}</div>
+                        <button wire:click="deleteToken({{ $st->id }})"
+                                wire:confirm="Revoke this share link?"
+                                class="shrink-0 text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors">
+                            Revoke
+                        </button>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </div>
     @endif
 
 </main>
