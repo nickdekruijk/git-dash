@@ -22,6 +22,7 @@ class DashboardController extends Controller
         $connection = $request->input('connection', 'main');
         $from = $request->input('from', now()->subDays(30)->toDateString());
         $to = $request->input('to', now()->toDateString());
+        $view = $request->input('view', 'timeline');
 
         $client = GitHub::connection($connection);
         $me = $client->currentUser()->show();
@@ -43,12 +44,26 @@ class DashboardController extends Controller
         $totalRepos = $items->pluck('repository.full_name')->unique()->count();
         $totalMinutes = $commitsByDate->sum('total_minutes');
 
+        $timeByRepo = collect($commitsByDate)
+            ->flatMap(fn (array $dayData) => $dayData['sessions'])
+            ->groupBy(fn (array $session) => $session['commits']->first()['repository']['full_name'])
+            ->map(fn (Collection $sessions, string $repoName) => [
+                'full_name' => $repoName,
+                'html_url' => $sessions->first()['commits']->first()['repository']['html_url'],
+                'minutes' => $sessions->sum('minutes'),
+                'commit_count' => $sessions->sum(fn (array $s) => $s['commits']->count()),
+                'session_count' => $sessions->count(),
+            ])
+            ->sortByDesc('minutes')
+            ->values();
+
         $connections = collect(config('github.connections'))
             ->filter(fn (array $conn) => ($conn['method'] ?? '') === 'token' && ! empty($conn['token']))
             ->keys();
 
         return view('dashboard', compact(
-            'commitsByDate', 'from', 'to', 'username', 'connection', 'connections',
+            'commitsByDate', 'timeByRepo', 'view',
+            'from', 'to', 'username', 'connection', 'connections',
             'totalCommits', 'totalRepos', 'totalMinutes',
         ));
     }
@@ -64,21 +79,27 @@ class DashboardController extends Controller
             ->sortBy(fn (array $c) => $c['commit']['author']['date'])
             ->values();
 
-        // Split into sessions based on gap between consecutive commits
+        // Split into sessions on time gap OR repository change
         $sessions = [];
         $current = [];
         $prevTime = null;
+        $prevRepo = null;
 
         foreach ($sorted as $commit) {
             $time = Carbon::parse($commit['commit']['author']['date']);
+            $repo = $commit['repository']['full_name'];
 
-            if ($prevTime !== null && $time->diffInMinutes($prevTime) > self::SESSION_GAP_MINUTES) {
+            $timeGapExceeded = $prevTime !== null && $time->diffInMinutes($prevTime) > self::SESSION_GAP_MINUTES;
+            $repoChanged = $prevRepo !== null && $repo !== $prevRepo;
+
+            if ($timeGapExceeded || $repoChanged) {
                 $sessions[] = $current;
                 $current = [];
             }
 
             $current[] = $commit;
             $prevTime = $time;
+            $prevRepo = $repo;
         }
 
         if (! empty($current)) {
