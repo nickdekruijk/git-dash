@@ -148,8 +148,8 @@
                                         $commitUrl = $commit['html_url'];
                                     @endphp
                                     <div class="px-4 py-2.5 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-800/30 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                        <div class="shrink-0 text-xs text-gray-400 dark:text-gray-500 w-28 tabular-nums">
-                                            {{ $commitDate->format('M j') }}
+                                        <div class="shrink-0 text-xs text-gray-400 dark:text-gray-500 w-36 tabular-nums">
+                                            {{ $commitDate->format('D M j') }}
                                             <span class="text-gray-300 dark:text-gray-600">·</span>
                                             {{ $commitDate->format('H:i') }}
                                         </div>
