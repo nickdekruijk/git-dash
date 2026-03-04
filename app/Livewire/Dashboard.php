@@ -29,6 +29,7 @@ class Dashboard extends Component
     public string $from = '';
     #[Url(as: 'to', except: '')]
     public string $to = '';
+    #[Url(as: 'view', except: 'timeline')]
     public string $view = 'timeline';
     public string $preset = '';
 
