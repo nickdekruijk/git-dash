@@ -33,10 +33,23 @@
 
                 <input type="hidden" name="view" value="{{ $view }}">
 
-                <input type="date" name="from" value="{{ $from }}"
+                <select id="preset-select"
+                        class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">Quick select…</option>
+                    <option value="this_week">This week</option>
+                    <option value="last_week">Last week</option>
+                    <option value="this_month">This month</option>
+                    <option value="last_month">Last month</option>
+                    <option value="last_7">Last 7 days</option>
+                    <option value="last_30">Last 30 days</option>
+                    <option value="last_90">Last 90 days</option>
+                    <option value="this_year">This year</option>
+                </select>
+
+                <input type="date" id="input-from" name="from" value="{{ $from }}"
                        class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <span class="text-gray-400 text-sm">to</span>
-                <input type="date" name="to" value="{{ $to }}"
+                <input type="date" id="input-to" name="to" value="{{ $to }}"
                        class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
 
                 <button type="submit"
@@ -250,6 +263,56 @@
         @endif
 
     </main>
+    <script>
+        document.getElementById('preset-select').addEventListener('change', function () {
+            const preset = this.value;
+            if (!preset) return;
 
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            let from = new Date(today), to = new Date(today);
+
+            const dow = today.getDay(); // 0=Sun … 6=Sat
+            const mondayOffset = dow === 0 ? -6 : 1 - dow;
+
+            switch (preset) {
+                case 'this_week':
+                    from.setDate(today.getDate() + mondayOffset);
+                    break;
+                case 'last_week':
+                    from.setDate(today.getDate() + mondayOffset - 7);
+                    to.setDate(today.getDate() + mondayOffset - 1);
+                    break;
+                case 'this_month':
+                    from = new Date(today.getFullYear(), today.getMonth(), 1);
+                    break;
+                case 'last_month':
+                    from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    to   = new Date(today.getFullYear(), today.getMonth(), 0);
+                    break;
+                case 'last_7':
+                    from.setDate(today.getDate() - 6);
+                    break;
+                case 'last_30':
+                    from.setDate(today.getDate() - 29);
+                    break;
+                case 'last_90':
+                    from.setDate(today.getDate() - 89);
+                    break;
+                case 'this_year':
+                    from = new Date(today.getFullYear(), 0, 1);
+                    break;
+            }
+
+            const fmt = d => [
+                d.getFullYear(),
+                String(d.getMonth() + 1).padStart(2, '0'),
+                String(d.getDate()).padStart(2, '0'),
+            ].join('-');
+            document.getElementById('input-from').value = fmt(from);
+            document.getElementById('input-to').value   = fmt(to);
+            document.getElementById('input-from').closest('form').submit();
+        });
+    </script>
 </body>
 </html>
