@@ -113,7 +113,7 @@ class DashboardController extends Controller
         foreach (array_reverse($sessions) as $sessionCommits) {
             $first = Carbon::parse($sessionCommits[0]['commit']['author']['date']);
             $last = Carbon::parse(end($sessionCommits)['commit']['author']['date']);
-            $minutes = $last->diffInMinutes($first) + self::SESSION_PADDING_MINUTES;
+            $minutes = $first->diffInMinutes($last) + self::SESSION_PADDING_MINUTES;
             $totalMinutes += $minutes;
 
             $sessionsData[] = [
