@@ -44,6 +44,9 @@
                     <option value="last_30">Last 30 days</option>
                     <option value="last_90">Last 90 days</option>
                     <option value="this_year">This year</option>
+                    <option value="last_year">Last year</option>
+                    <option value="this_quarter">This quarter</option>
+                    <option value="last_quarter">Last quarter</option>
                 </select>
 
                 <input type="date" id="input-from" name="from" value="{{ $from }}"
@@ -301,6 +304,18 @@
                     break;
                 case 'this_year':
                     from = new Date(today.getFullYear(), 0, 1);
+                    break;
+                case 'last_year':
+                    from = new Date(today.getFullYear() - 1, 0, 1);
+                    to   = new Date(today.getFullYear() - 1, 11, 31);
+                    break;
+                case 'this_quarter':
+                    from = new Date(today.getFullYear(), Math.floor(today.getMonth() / 3) * 3, 1);
+                    break;
+                case 'last_quarter':
+                    const lqStartMonth = Math.floor(today.getMonth() / 3) * 3 - 3;
+                    from = new Date(today.getFullYear(), lqStartMonth, 1);
+                    to   = new Date(today.getFullYear(), lqStartMonth + 3, 0);
                     break;
             }
 
