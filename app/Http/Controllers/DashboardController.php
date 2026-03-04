@@ -23,6 +23,7 @@ class DashboardController extends Controller
         $from = $request->input('from', now()->subDays(30)->toDateString());
         $to = $request->input('to', now()->toDateString());
         $view = $request->input('view', 'timeline');
+        $preset = $request->input('preset', '');
 
         $client = GitHub::connection($connection);
         $me = $client->currentUser()->show();
@@ -66,7 +67,7 @@ class DashboardController extends Controller
             ->keys();
 
         return view('dashboard', compact(
-            'commitsByDate', 'timeByRepo', 'view',
+            'commitsByDate', 'timeByRepo', 'view', 'preset',
             'from', 'to', 'username', 'connection', 'connections',
             'totalCommits', 'totalRepos', 'totalMinutes',
         ));

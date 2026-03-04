@@ -33,20 +33,20 @@
 
                 <input type="hidden" name="view" value="{{ $view }}">
 
-                <select id="preset-select"
+                <select id="preset-select" name="preset"
                         class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="">Quick select…</option>
-                    <option value="this_week">This week</option>
-                    <option value="last_week">Last week</option>
-                    <option value="this_month">This month</option>
-                    <option value="last_month">Last month</option>
-                    <option value="last_7">Last 7 days</option>
-                    <option value="last_30">Last 30 days</option>
-                    <option value="last_90">Last 90 days</option>
-                    <option value="this_year">This year</option>
-                    <option value="last_year">Last year</option>
-                    <option value="this_quarter">This quarter</option>
-                    <option value="last_quarter">Last quarter</option>
+                    <option value="this_week"    @selected($preset === 'this_week')>This week</option>
+                    <option value="last_week"    @selected($preset === 'last_week')>Last week</option>
+                    <option value="this_month"   @selected($preset === 'this_month')>This month</option>
+                    <option value="last_month"   @selected($preset === 'last_month')>Last month</option>
+                    <option value="last_7"       @selected($preset === 'last_7')>Last 7 days</option>
+                    <option value="last_30"      @selected($preset === 'last_30')>Last 30 days</option>
+                    <option value="last_90"      @selected($preset === 'last_90')>Last 90 days</option>
+                    <option value="this_year"    @selected($preset === 'this_year')>This year</option>
+                    <option value="last_year"    @selected($preset === 'last_year')>Last year</option>
+                    <option value="this_quarter" @selected($preset === 'this_quarter')>This quarter</option>
+                    <option value="last_quarter" @selected($preset === 'last_quarter')>Last quarter</option>
                 </select>
 
                 <input type="date" id="input-from" name="from" value="{{ $from }}"
@@ -267,6 +267,9 @@
 
     </main>
     <script>
+        document.getElementById('input-from').addEventListener('change', () => document.getElementById('preset-select').value = '');
+        document.getElementById('input-to').addEventListener('change',   () => document.getElementById('preset-select').value = '');
+
         document.getElementById('preset-select').addEventListener('change', function () {
             const preset = this.value;
             if (!preset) return;
