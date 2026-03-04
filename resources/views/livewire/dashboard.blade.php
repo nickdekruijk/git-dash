@@ -102,25 +102,9 @@
             };
         @endphp
 
-        {{-- View tabs (only shown when there is more than one tab to choose from) --}}
-        @if ($connections->isNotEmpty() && !$lockedRepository)
-            <div class="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-800">
-                <button wire:click="$set('view', 'timeline')"
-                    class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
-                       {{ $view === 'timeline' ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}">
-                    Timeline
-                </button>
-                <button wire:click="$set('view', 'repositories')"
-                    class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
-                       {{ $view === 'repositories' ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}">
-                    By Repository
-                </button>
-            </div>
-        @endif
-
         {{-- Summary cards (hidden on Share Links / Connections tabs, or when no connections) --}}
         @if ($view !== 'sharing' && $view !== 'connections' && $connections->isNotEmpty())
-            <div class="grid @if ($lockedRepository) grid-cols-3 @else grid-cols-4 @endif gap-4 mb-6">
+            <div class="grid @if ($lockedRepository) grid-cols-3 @else grid-cols-4 @endif gap-4 mb-4">
                 <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 text-center">
                     <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ $totalCommits }}</div>
                     <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Commits</div>
@@ -139,6 +123,22 @@
                     <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">~{{ $fmt($totalMinutes) }}</div>
                     <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Est. time</div>
                 </div>
+            </div>
+        @endif
+
+        {{-- View tabs (only shown when there is more than one tab to choose from) --}}
+        @if ($connections->isNotEmpty() && !$lockedRepository)
+            <div class="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-800">
+                <button wire:click="$set('view', 'timeline')"
+                    class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
+                       {{ $view === 'timeline' ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}">
+                    Timeline
+                </button>
+                <button wire:click="$set('view', 'repositories')"
+                    class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
+                       {{ $view === 'repositories' ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}">
+                    By Repository
+                </button>
             </div>
         @endif
 
