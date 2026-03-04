@@ -74,15 +74,15 @@ class Dashboard extends Component
             $this->lockedConnection = $lockedConnection;
             $this->lockedRepository = $lockedRepository;
             $this->connection = $lockedConnection;
-        } elseif ($isDataPage) {
+        } else {
             // Default to first available DB connection (only if not already set via URL)
             $first = GithubConnection::orderBy('name')->value('name');
             if ($first) {
-                if (! $this->connection) {
+                if ($isDataPage && ! $this->connection) {
                     $this->connection = $first;
                 }
-                $this->newTokenConnection = $this->connection;
-            } else {
+                $this->newTokenConnection = $this->connection ?: $first;
+            } elseif ($isDataPage) {
                 // No connections yet — land on the Connections tab
                 $this->view = 'connections';
             }
