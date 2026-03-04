@@ -11,18 +11,24 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
+            {{-- Connection selector (owner only) --}}
             @if ($lockedConnection === null)
-            {{-- Connection selector --}}
-            @if ($connections->count() > 1)
-                <select wire:model.live="connection"
-                        class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    @foreach ($connections as $conn)
-                        <option value="{{ $conn }}">{{ $conn }}</option>
-                    @endforeach
-                </select>
+                @if ($connections->count() > 1)
+                    <select wire:model.live="connection"
+                            class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        @foreach ($connections as $conn)
+                            <option value="{{ $conn }}">{{ $conn }}</option>
+                        @endforeach
+                    </select>
+                @endif
+            @else
+                {{-- Share mode badge --}}
+                <span class="text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-full px-3 py-1">
+                    Shared view · {{ $lockedConnection }}
+                </span>
             @endif
 
-            {{-- Preset selector — immediately triggers updatedPreset() --}}
+            {{-- Preset selector — shown in both modes --}}
             <select wire:model.live="preset"
                     class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="">Quick select…</option>
@@ -39,7 +45,7 @@
                 <option value="last_quarter">Last quarter</option>
             </select>
 
-            {{-- Date range — deferred, applied on Filter click --}}
+            {{-- Date range — shown in both modes --}}
             <input type="date" wire:model="from"
                    class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <span class="text-gray-400 text-sm">to</span>
@@ -52,25 +58,6 @@
                 <span wire:loading.remove wire:target="filter">Filter</span>
                 <span wire:loading wire:target="filter">Loading…</span>
             </button>
-            @else
-            {{-- Share mode: read-only badge --}}
-            <span class="text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-full px-3 py-1">
-                Shared view · {{ $lockedConnection }}
-            </span>
-
-            {{-- Date controls still work in share mode --}}
-            <input type="date" wire:model="from"
-                   class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <span class="text-gray-400 text-sm">to</span>
-            <input type="date" wire:model="to"
-                   class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <button wire:click="filter"
-                    wire:loading.attr="disabled"
-                    class="rounded-md bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-1.5 text-sm font-medium transition-colors">
-                <span wire:loading.remove wire:target="filter">Filter</span>
-                <span wire:loading wire:target="filter">Loading…</span>
-            </button>
-            @endif
 
             @if ($lockedConnection === null)
             <form method="POST" action="{{ route('logout') }}">
