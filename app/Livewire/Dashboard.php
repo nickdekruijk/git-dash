@@ -67,9 +67,6 @@ class Dashboard extends Component
         $this->preset = '';
     }
 
-    /** Explicit re-fetch triggered by the Filter button (syncs deferred wire:model values). */
-    public function filter(): void {}
-
     /** Prevent changing connection when in share/locked mode. */
     public function updatedConnection(): void
     {

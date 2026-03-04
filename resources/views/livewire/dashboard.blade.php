@@ -46,18 +46,11 @@
             </select>
 
             {{-- Date range — shown in both modes --}}
-            <input type="date" wire:model="from"
+            <input type="date" wire:model.live="from"
                    class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <span class="text-gray-400 text-sm">to</span>
-            <input type="date" wire:model="to"
+            <input type="date" wire:model.live="to"
                    class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-
-            <button wire:click="filter"
-                    wire:loading.attr="disabled"
-                    class="rounded-md bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-1.5 text-sm font-medium transition-colors">
-                <span wire:loading.remove wire:target="filter">Filter</span>
-                <span wire:loading wire:target="filter">Loading…</span>
-            </button>
 
             @if ($lockedConnection === null)
             <form method="POST" action="{{ route('logout') }}">
