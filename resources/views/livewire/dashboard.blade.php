@@ -11,6 +11,8 @@
             <div class="flex-1"></div>
 
             {{-- Filters inline in header --}}
+            {{-- Filters (hidden on Share Links / Connections pages) --}}
+            @if ($view !== 'sharing' && $view !== 'connections')
             <div class="flex items-center gap-2">
                 <select wire:model.live="preset"
                     class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -42,6 +44,7 @@
                     </select>
                 @endif
             </div>
+            @endif
 
             {{-- Share mode badge --}}
             @if ($lockedConnection !== null)
@@ -65,15 +68,15 @@
                     <div x-show="open" x-transition
                         class="absolute right-0 mt-1 w-44 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-20">
                         @if ($connections->isNotEmpty())
-                            <button wire:click="$set('view', 'sharing')" @click="open = false"
-                                class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 {{ $view === 'sharing' ? 'font-medium text-indigo-600 dark:text-indigo-400' : '' }}">
+                            <a href="{{ route('share-links') }}"
+                                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 {{ $view === 'sharing' ? 'font-medium text-indigo-600 dark:text-indigo-400' : '' }}">
                                 Share Links
-                            </button>
+                            </a>
                         @endif
-                        <button wire:click="$set('view', 'connections')" @click="open = false"
-                            class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 {{ $view === 'connections' ? 'font-medium text-indigo-600 dark:text-indigo-400' : '' }}">
+                        <a href="{{ route('connections') }}"
+                            class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 {{ $view === 'connections' ? 'font-medium text-indigo-600 dark:text-indigo-400' : '' }}">
                             Connections
-                        </button>
+                        </a>
                         <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf

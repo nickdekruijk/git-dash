@@ -58,18 +58,23 @@ class Dashboard extends Component
 
     public function mount(?string $lockedConnection = null, ?string $lockedRepository = null): void
     {
-        if (! $this->from) {
-            $this->from = now()->subDays(30)->toDateString();
+        // Set view based on route
+        $routeName = request()->route()?->getName();
+        if ($routeName === 'share-links') {
+            $this->view = 'sharing';
+        } elseif ($routeName === 'connections') {
+            $this->view = 'connections';
         }
-        if (! $this->to) {
-            $this->to = now()->toDateString();
-        }
+
+        // Don't set date/connection defaults on pages that don't need them —
+        // leaving them as '' (the #[Url] except value) keeps the URL clean.
+        $isDataPage = ! in_array($routeName, ['share-links', 'connections']);
 
         if ($lockedConnection !== null) {
             $this->lockedConnection = $lockedConnection;
             $this->lockedRepository = $lockedRepository;
             $this->connection = $lockedConnection;
-        } else {
+        } elseif ($isDataPage) {
             // Default to first available DB connection (only if not already set via URL)
             $first = GithubConnection::orderBy('name')->value('name');
             if ($first) {
@@ -80,6 +85,15 @@ class Dashboard extends Component
             } else {
                 // No connections yet — land on the Connections tab
                 $this->view = 'connections';
+            }
+        }
+
+        if ($isDataPage) {
+            if (! $this->from) {
+                $this->from = now()->subDays(30)->toDateString();
+            }
+            if (! $this->to) {
+                $this->to = now()->toDateString();
             }
         }
     }
