@@ -496,12 +496,13 @@
             $cFiles = $cDetail['files'] ?? [];
         @endphp
 
+        <div x-data="{ open: true }">
         {{-- Backdrop --}}
-        <div wire:click="closeCommit"
+        <div x-show="open" @click="open = false; $wire.closeCommit()"
             class="fixed inset-0 bg-black/40 dark:bg-black/60 z-40 backdrop-blur-sm"></div>
 
         {{-- Panel --}}
-        <div class="fixed inset-y-0 right-0 w-full max-w-xl bg-white dark:bg-gray-900 shadow-2xl z-50 flex flex-col overflow-hidden">
+        <div x-show="open" class="fixed inset-y-0 right-0 w-full max-w-xl bg-white dark:bg-gray-900 shadow-2xl z-50 flex flex-col overflow-hidden">
 
             {{-- Modal header --}}
             <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-200 dark:border-gray-800 shrink-0">
@@ -509,7 +510,7 @@
                     <div class="font-mono text-xs text-gray-400 dark:text-gray-500 mb-0.5">{{ $cShort }}</div>
                     <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{{ $cSubject }}</h2>
                 </div>
-                <button wire:click="closeCommit"
+                <button @click="open = false; $wire.closeCommit()"
                     class="shrink-0 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 dark:text-gray-500 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -603,6 +604,7 @@
                 </a>
             </div>
         </div>
+        </div>{{-- /x-data --}}
     @endif
 
 </div>
