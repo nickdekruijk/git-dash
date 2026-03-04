@@ -86,7 +86,8 @@
         };
     @endphp
 
-    {{-- Summary cards --}}
+    {{-- Summary cards (hidden on Share Links tab) --}}
+    @if ($view !== 'sharing')
     <div class="grid grid-cols-4 gap-4 mb-6">
         <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 text-center">
             <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ $totalCommits }}</div>
@@ -105,6 +106,7 @@
             <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Est. time</div>
         </div>
     </div>
+    @endif
 
     {{-- View toggle tabs --}}
     <div class="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-800">
@@ -122,6 +124,15 @@
                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}">
             By Repository
         </button>
+        @if ($lockedConnection === null)
+        <button wire:click="$set('view', 'sharing')"
+                class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
+                       {{ $view === 'sharing'
+                           ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
+                           : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}">
+            Share Links
+        </button>
+        @endif
     </div>
 
     {{-- ── By Repository view ── --}}
@@ -195,7 +206,7 @@
         @endif
 
     {{-- ── Timeline view ── --}}
-    @else
+    @elseif ($view === 'timeline')
 
         @forelse ($commitsByDate as $date => $dayData)
             <div class="mb-8">
@@ -274,10 +285,8 @@
 
     @endif
 
-    {{-- ── Share Token Management (owner only) ── --}}
-    @if ($lockedConnection === null)
-    <div class="mt-12 border-t border-gray-200 dark:border-gray-800 pt-8">
-        <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Share Links</h2>
+    {{-- ── Share Links tab (owner only) ── --}}
+    @if ($view === 'sharing')
 
         {{-- Create new token --}}
         <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 mb-4">
@@ -336,7 +345,7 @@
                 @endforeach
             </div>
         @endif
-    </div>
+
     @endif
 
 </main>
