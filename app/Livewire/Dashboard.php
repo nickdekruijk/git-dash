@@ -17,7 +17,7 @@ use Livewire\Component;
 class Dashboard extends Component
 {
     /** Minutes gap between commits that starts a new work session. */
-    private const SESSION_GAP_MINUTES = 120;
+    private const SESSION_GAP_MINUTES = 90;
 
     /** Extra minutes added per session for work done before the first commit. */
     private const SESSION_PADDING_MINUTES = 30;
