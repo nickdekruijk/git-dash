@@ -191,18 +191,19 @@
                                         $commitUrl = $commit['html_url'];
                                     @endphp
                                     <div class="px-4 py-2.5 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-800/30 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                        <button wire:click="selectCommit('{{ $commit['sha'] }}', '{{ $repo['full_name'] }}')"
+                                            class="contents">
                                         <div class="shrink-0 text-xs text-gray-400 dark:text-gray-500 w-36 tabular-nums">
                                             {{ $commitDate->format('D M j') }}
                                             <span class="text-gray-300 dark:text-gray-600">·</span>
                                             {{ $commitDate->format('H:i') }}
                                         </div>
-                                        <button wire:click="selectCommit('{{ $commit['sha'] }}', '{{ $repo['full_name'] }}')"
-                                            class="flex-1 min-w-0 text-sm text-gray-700 dark:text-gray-300 hover:underline truncate text-left">
+                                        <span class="flex-1 min-w-0 text-sm text-gray-700 dark:text-gray-300 truncate text-left">
                                             {{ $message }}
-                                        </button>
-                                        <button wire:click="selectCommit('{{ $commit['sha'] }}', '{{ $repo['full_name'] }}')"
-                                            class="shrink-0 font-mono text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-500 dark:text-gray-400">
+                                        </span>
+                                        <span class="shrink-0 font-mono text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 dark:text-gray-400">
                                             {{ $sha }}
+                                        </span>
                                         </button>
                                     </div>
                                 @endforeach
@@ -253,27 +254,25 @@
                                             $repoUrl = $item['repository']['html_url'];
                                             $commitUrl = $item['html_url'];
                                         @endphp
-                                        <div class="px-4 py-3 flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                        <button wire:click="selectCommit('{{ $item['sha'] }}', '{{ $repoName }}')"
+                                            class="px-4 py-3 flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors w-full text-left">
                                             <div class="flex-1 min-w-0">
                                                 <div class="flex items-center gap-2 mb-0.5">
-                                                    <a href="{{ $repoUrl }}" target="_blank"
-                                                        class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline truncate">
+                                                    <span class="text-xs font-medium text-indigo-600 dark:text-indigo-400 truncate">
                                                         {{ $repoName }}
-                                                    </a>
+                                                    </span>
                                                 </div>
-                                                <button wire:click="selectCommit('{{ $item['sha'] }}', '{{ $repoName }}')"
-                                                    class="text-sm text-gray-800 dark:text-gray-200 hover:underline line-clamp-2 break-words text-left w-full">
+                                                <span class="text-sm text-gray-800 dark:text-gray-200 line-clamp-2 break-words">
                                                     {{ $message }}
-                                                </button>
+                                                </span>
                                             </div>
                                             <div class="flex items-center gap-2 shrink-0 text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                                                 <span>{{ $time }}</span>
-                                                <button wire:click="selectCommit('{{ $item['sha'] }}', '{{ $repoName }}')"
-                                                    class="font-mono bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                                                <span class="font-mono bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
                                                     {{ $sha }}
-                                                </button>
+                                                </span>
                                             </div>
-                                        </div>
+                                        </button>
                                     @endforeach
                                 </div>
                             </div>
