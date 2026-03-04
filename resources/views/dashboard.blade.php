@@ -47,13 +47,20 @@
 
     <main class="max-w-5xl mx-auto px-4 py-6">
 
-        {{-- Summary --}}
         @php
-            $totalCommits = $commitsByDate->flatten(1)->count();
-            $totalRepos = $commitsByDate->flatten(1)->pluck('repository.full_name')->unique()->count();
+            /** Format minutes as e.g. "1h 30m" or "45m" */
+            $fmt = function (int $minutes): string {
+                if ($minutes < 60) {
+                    return $minutes . 'm';
+                }
+                $h = intdiv($minutes, 60);
+                $m = $minutes % 60;
+                return $m > 0 ? "{$h}h {$m}m" : "{$h}h";
+            };
         @endphp
 
-        <div class="grid grid-cols-3 gap-4 mb-8">
+        {{-- Summary --}}
+        <div class="grid grid-cols-4 gap-4 mb-8">
             <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 text-center">
                 <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ $totalCommits }}</div>
                 <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Commits</div>
@@ -66,53 +73,77 @@
                 <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ $commitsByDate->count() }}</div>
                 <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Active days</div>
             </div>
+            <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 text-center">
+                <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">~{{ $fmt($totalMinutes) }}</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Est. time</div>
+            </div>
         </div>
 
-        {{-- Commits grouped by date --}}
-        @forelse ($commitsByDate as $date => $commits)
-            <div class="mb-6">
+        {{-- Commits grouped by date → sessions --}}
+        @forelse ($commitsByDate as $date => $dayData)
+            <div class="mb-8">
+
+                {{-- Date header --}}
                 <div class="flex items-center gap-3 mb-3">
                     <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                         {{ \Carbon\Carbon::parse($date)->format('l, F j, Y') }}
                     </h2>
+                    @php $dayCommitCount = collect($dayData['sessions'])->sum(fn($s) => $s['commits']->count()); @endphp
                     <span class="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full px-2 py-0.5">
-                        {{ $commits->count() }} {{ Str::plural('commit', $commits->count()) }}
+                        {{ $dayCommitCount }} {{ Str::plural('commit', $dayCommitCount) }}
+                    </span>
+                    <span class="text-xs bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-full px-2 py-0.5">
+                        ~{{ $fmt($dayData['total_minutes']) }}
                     </span>
                 </div>
 
-                <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
-                    @foreach ($commits as $item)
-                        @php
-                            $message = explode("\n", trim($item['commit']['message']))[0];
-                            $sha = substr($item['sha'], 0, 7);
-                            $time = \Carbon\Carbon::parse($item['commit']['author']['date'])->format('H:i');
-                            $repoName = $item['repository']['full_name'];
-                            $repoUrl = $item['repository']['html_url'];
-                            $commitUrl = $item['html_url'];
-                        @endphp
-                        <div class="px-4 py-3 flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2 mb-0.5">
-                                    <a href="{{ $repoUrl }}" target="_blank"
-                                       class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline truncate">
-                                        {{ $repoName }}
-                                    </a>
+                {{-- Work sessions for this day --}}
+                <div class="space-y-3">
+                    @foreach ($dayData['sessions'] as $session)
+                        <div>
+                            @if (count($dayData['sessions']) > 1)
+                                <div class="flex items-center gap-2 mb-1.5 ml-1">
+                                    <span class="text-xs text-gray-400 dark:text-gray-500">Session — ~{{ $fmt($session['minutes']) }}</span>
                                 </div>
-                                <a href="{{ $commitUrl }}" target="_blank"
-                                   class="text-sm text-gray-800 dark:text-gray-200 hover:underline line-clamp-2 break-words">
-                                    {{ $message }}
-                                </a>
-                            </div>
-                            <div class="flex items-center gap-2 shrink-0 text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                                <span>{{ $time }}</span>
-                                <a href="{{ $commitUrl }}" target="_blank"
-                                   class="font-mono bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                                    {{ $sha }}
-                                </a>
+                            @endif
+
+                            <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
+                                @foreach ($session['commits'] as $item)
+                                    @php
+                                        $message = explode("\n", trim($item['commit']['message']))[0];
+                                        $sha = substr($item['sha'], 0, 7);
+                                        $time = \Carbon\Carbon::parse($item['commit']['author']['date'])->format('H:i');
+                                        $repoName = $item['repository']['full_name'];
+                                        $repoUrl = $item['repository']['html_url'];
+                                        $commitUrl = $item['html_url'];
+                                    @endphp
+                                    <div class="px-4 py-3 flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 mb-0.5">
+                                                <a href="{{ $repoUrl }}" target="_blank"
+                                                   class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline truncate">
+                                                    {{ $repoName }}
+                                                </a>
+                                            </div>
+                                            <a href="{{ $commitUrl }}" target="_blank"
+                                               class="text-sm text-gray-800 dark:text-gray-200 hover:underline line-clamp-2 break-words">
+                                                {{ $message }}
+                                            </a>
+                                        </div>
+                                        <div class="flex items-center gap-2 shrink-0 text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                                            <span>{{ $time }}</span>
+                                            <a href="{{ $commitUrl }}" target="_blank"
+                                               class="font-mono bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                                                {{ $sha }}
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
                     @endforeach
                 </div>
+
             </div>
         @empty
             <div class="text-center py-16 text-gray-400 dark:text-gray-500">
