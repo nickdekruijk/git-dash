@@ -11,6 +11,7 @@ use App\Models\GithubConnection;
 use App\Models\ShareToken;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 #[Layout('components.layouts.app')]
@@ -22,8 +23,11 @@ class Dashboard extends Component
     /** Extra minutes added per session for work done before the first commit. */
     private const SESSION_PADDING_MINUTES = 30;
 
+    #[Url(as: 'connection', except: '')]
     public string $connection = '';
+    #[Url(as: 'from', except: '')]
     public string $from = '';
+    #[Url(as: 'to', except: '')]
     public string $to = '';
     public string $view = 'timeline';
     public string $preset = '';
@@ -54,19 +58,25 @@ class Dashboard extends Component
 
     public function mount(?string $lockedConnection = null, ?string $lockedRepository = null): void
     {
-        $this->from = now()->subDays(30)->toDateString();
-        $this->to = now()->toDateString();
+        if (! $this->from) {
+            $this->from = now()->subDays(30)->toDateString();
+        }
+        if (! $this->to) {
+            $this->to = now()->toDateString();
+        }
 
         if ($lockedConnection !== null) {
             $this->lockedConnection = $lockedConnection;
             $this->lockedRepository = $lockedRepository;
             $this->connection = $lockedConnection;
         } else {
-            // Default to first available DB connection
+            // Default to first available DB connection (only if not already set via URL)
             $first = GithubConnection::orderBy('name')->value('name');
             if ($first) {
-                $this->connection = $first;
-                $this->newTokenConnection = $first;
+                if (! $this->connection) {
+                    $this->connection = $first;
+                }
+                $this->newTokenConnection = $this->connection;
             } else {
                 // No connections yet — land on the Connections tab
                 $this->view = 'connections';
