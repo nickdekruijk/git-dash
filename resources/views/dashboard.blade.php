@@ -112,25 +112,59 @@
                 <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
                     @foreach ($timeByRepo as $repo)
                         @php $pct = $totalMinutes > 0 ? round($repo['minutes'] / $totalMinutes * 100) : 0; @endphp
-                        <div class="px-4 py-3 flex items-center gap-4">
-                            <div class="flex-1 min-w-0">
-                                <a href="{{ $repo['html_url'] }}" target="_blank"
-                                   class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
-                                    {{ $repo['full_name'] }}
-                                </a>
-                                <div class="mt-1.5 h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                                    <div class="h-full bg-indigo-500 dark:bg-indigo-400 rounded-full"
-                                         style="width: {{ $pct }}%"></div>
+                        <details class="group">
+                            <summary class="px-4 py-3 flex items-center gap-4 cursor-pointer list-none hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors select-none">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-1.5 mb-1.5">
+                                        <svg class="w-3.5 h-3.5 shrink-0 text-gray-400 dark:text-gray-500 transition-transform duration-150 group-open:rotate-90"
+                                             viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <a href="{{ $repo['html_url'] }}" target="_blank"
+                                           class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+                                           onclick="event.stopPropagation()">
+                                            {{ $repo['full_name'] }}
+                                        </a>
+                                    </div>
+                                    <div class="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                                        <div class="h-full bg-indigo-500 dark:bg-indigo-400 rounded-full" style="width: {{ $pct }}%"></div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="shrink-0 text-right">
-                                <div class="text-sm font-semibold text-gray-800 dark:text-gray-200">~{{ $fmt($repo['minutes']) }}</div>
-                                <div class="text-xs text-gray-400 dark:text-gray-500">
-                                    {{ $repo['commit_count'] }} {{ Str::plural('commit', $repo['commit_count']) }}
-                                    · {{ $pct }}%
+                                <div class="shrink-0 text-right">
+                                    <div class="text-sm font-semibold text-gray-800 dark:text-gray-200">~{{ $fmt($repo['minutes']) }}</div>
+                                    <div class="text-xs text-gray-400 dark:text-gray-500">
+                                        {{ $repo['commit_count'] }} {{ Str::plural('commit', $repo['commit_count']) }}
+                                        · {{ $pct }}%
+                                    </div>
                                 </div>
+                            </summary>
+
+                            <div class="border-t border-gray-100 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
+                                @foreach ($repo['commits'] as $commit)
+                                    @php
+                                        $message = explode("\n", trim($commit['commit']['message']))[0];
+                                        $sha = substr($commit['sha'], 0, 7);
+                                        $commitDate = \Carbon\Carbon::parse($commit['commit']['author']['date']);
+                                        $commitUrl = $commit['html_url'];
+                                    @endphp
+                                    <div class="px-4 py-2.5 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-800/30 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                        <div class="shrink-0 text-xs text-gray-400 dark:text-gray-500 w-28 tabular-nums">
+                                            {{ $commitDate->format('M j') }}
+                                            <span class="text-gray-300 dark:text-gray-600">·</span>
+                                            {{ $commitDate->format('H:i') }}
+                                        </div>
+                                        <a href="{{ $commitUrl }}" target="_blank"
+                                           class="flex-1 min-w-0 text-sm text-gray-700 dark:text-gray-300 hover:underline truncate">
+                                            {{ $message }}
+                                        </a>
+                                        <a href="{{ $commitUrl }}" target="_blank"
+                                           class="shrink-0 font-mono text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-500 dark:text-gray-400">
+                                            {{ $sha }}
+                                        </a>
+                                    </div>
+                                @endforeach
                             </div>
-                        </div>
+                        </details>
                     @endforeach
                 </div>
             @endif

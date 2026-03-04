@@ -53,6 +53,10 @@ class DashboardController extends Controller
                 'minutes' => $sessions->sum('minutes'),
                 'commit_count' => $sessions->sum(fn (array $s) => $s['commits']->count()),
                 'session_count' => $sessions->count(),
+                'commits' => $sessions
+                    ->flatMap(fn (array $s) => $s['commits'])
+                    ->sortByDesc(fn (array $c) => $c['commit']['author']['date'])
+                    ->values(),
             ])
             ->sortByDesc('minutes')
             ->values();
