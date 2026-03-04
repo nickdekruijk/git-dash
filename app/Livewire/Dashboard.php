@@ -374,7 +374,6 @@ class Dashboard extends Component
             'totalMinutes'        => $needsData ? $this->totalMinutes : 0,
             'connections'         => $this->connections,
             'shareTokens'         => $this->lockedConnection === null ? $this->shareTokens : collect(),
-            'newTokenRepositories' => $this->view === 'sharing' ? $this->newTokenRepositories : collect(),
         ]);
     }
 

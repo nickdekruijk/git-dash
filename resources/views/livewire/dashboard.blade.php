@@ -307,7 +307,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Connection</label>
-                        <select wire:model="newTokenConnection"
+                        <select wire:model.live="newTokenConnection"
                             class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             @foreach ($connections as $conn)
                                 <option value="{{ $conn->name }}">{{ $conn->label }}</option>
@@ -319,7 +319,7 @@
                         <select wire:model="newTokenRepository"
                             class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-56">
                             <option value="">All repositories</option>
-                            @foreach ($newTokenRepositories as $repo)
+                            @foreach ($this->newTokenRepositories as $repo)
                                 <option value="{{ $repo }}">{{ $repo }}</option>
                             @endforeach
                         </select>
