@@ -275,12 +275,14 @@ class Dashboard extends Component
 
     public function render(): \Illuminate\View\View
     {
+        $needsData = in_array($this->view, ['timeline', 'repositories']);
+
         return view('livewire.dashboard', [
-            'commitsByDate'  => $this->commitsByDate,
-            'timeByRepo'     => $this->timeByRepo,
-            'totalCommits'   => $this->totalCommits,
-            'totalRepos'     => $this->totalRepos,
-            'totalMinutes'   => $this->totalMinutes,
+            'commitsByDate'  => $needsData ? $this->commitsByDate : collect(),
+            'timeByRepo'     => $needsData ? $this->timeByRepo : collect(),
+            'totalCommits'   => $needsData ? $this->totalCommits : 0,
+            'totalRepos'     => $needsData ? $this->totalRepos : 0,
+            'totalMinutes'   => $needsData ? $this->totalMinutes : 0,
             'username'       => $this->username,
             'connections'    => $this->connections,
             'shareTokens'    => $this->lockedConnection === null ? $this->shareTokens : collect(),
