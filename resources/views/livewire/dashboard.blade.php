@@ -65,7 +65,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
-                    <div x-show="open" x-transition
+                    <div x-show="open" x-cloak x-transition
                         class="absolute right-0 mt-1 w-44 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-20">
                         @if ($connections->isNotEmpty())
                             <a href="{{ route('share-links') }}"

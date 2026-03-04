@@ -12,6 +12,8 @@
         "Noto Color Emoji";
 }
 
+[x-cloak] { display: none !important; }
+
 select {
     appearance: none;
     padding-top: 0.375rem;
