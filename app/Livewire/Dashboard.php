@@ -49,6 +49,9 @@ class Dashboard extends Component
     public string $editConnLabel = '';
     public string $editConnToken = '';
 
+    /** Currently selected commit detail (null = modal closed). */
+    public ?array $selectedCommit = null;
+
     public function mount(?string $lockedConnection = null, ?string $lockedRepository = null): void
     {
         $this->from = now()->subDays(30)->toDateString();
@@ -226,6 +229,31 @@ class Dashboard extends Component
         $this->newTokenConnection = $this->connection;
     }
 
+    /** Open the commit detail modal by fetching full details from GitHub. */
+    public function selectCommit(string $sha, string $repo): void
+    {
+        $this->bootGitHubConnection($this->connection);
+        $client = GitHub::connection($this->connection);
+
+        [$owner, $repoName] = explode('/', $repo, 2);
+
+        $commit = $client->api('repo')->commits()->show($owner, $repoName, $sha);
+
+        // The full commit API response omits repository info, so we inject it.
+        $commit['repository'] = [
+            'full_name' => $repo,
+            'html_url'  => 'https://github.com/' . $repo,
+        ];
+
+        $this->selectedCommit = $commit;
+    }
+
+    /** Close the commit detail modal. */
+    public function closeCommit(): void
+    {
+        $this->selectedCommit = null;
+    }
+
     #[Computed]
     public function username(): string
     {
@@ -265,9 +293,9 @@ class Dashboard extends Component
     public function commitsByDate(): Collection
     {
         return $this->items
-            ->groupBy(fn (array $item) => substr($item['commit']['author']['date'], 0, 10))
+            ->groupBy(fn(array $item) => substr($item['commit']['author']['date'], 0, 10))
             ->sortKeysDesc()
-            ->map(fn (Collection $dayCommits) => $this->buildDayData($dayCommits));
+            ->map(fn(Collection $dayCommits) => $this->buildDayData($dayCommits));
     }
 
     #[Computed]
@@ -292,17 +320,17 @@ class Dashboard extends Component
     public function timeByRepo(): Collection
     {
         return collect($this->commitsByDate)
-            ->flatMap(fn (array $dayData) => $dayData['sessions'])
-            ->groupBy(fn (array $session) => $session['commits']->first()['repository']['full_name'])
-            ->map(fn (Collection $sessions, string $repoName) => [
+            ->flatMap(fn(array $dayData) => $dayData['sessions'])
+            ->groupBy(fn(array $session) => $session['commits']->first()['repository']['full_name'])
+            ->map(fn(Collection $sessions, string $repoName) => [
                 'full_name' => $repoName,
                 'html_url' => $sessions->first()['commits']->first()['repository']['html_url'],
                 'minutes' => $sessions->sum('minutes'),
-                'commit_count' => $sessions->sum(fn (array $s) => $s['commits']->count()),
+                'commit_count' => $sessions->sum(fn(array $s) => $s['commits']->count()),
                 'session_count' => $sessions->count(),
                 'commits' => $sessions
-                    ->flatMap(fn (array $s) => $s['commits'])
-                    ->sortByDesc(fn (array $c) => $c['commit']['author']['date'])
+                    ->flatMap(fn(array $s) => $s['commits'])
+                    ->sortByDesc(fn(array $c) => $c['commit']['author']['date'])
                     ->values(),
             ])
             ->sortByDesc('minutes')
@@ -349,7 +377,7 @@ class Dashboard extends Component
     private function buildDayData(Collection $commits): array
     {
         $sorted = $commits
-            ->sortBy(fn (array $c) => $c['commit']['author']['date'])
+            ->sortBy(fn(array $c) => $c['commit']['author']['date'])
             ->values();
 
         // Split into sessions on time gap OR repository change

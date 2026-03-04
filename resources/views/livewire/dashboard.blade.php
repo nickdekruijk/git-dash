@@ -99,6 +99,7 @@
             </select>
         @endif
     </div>
+    @endif
 
     {{-- View tabs (only shown when there is more than one tab to choose from) --}}
     @if ($connections->isNotEmpty() && ! $lockedRepository)
@@ -118,7 +119,6 @@
             By Repository
         </button>
     </div>
-    @endif
     @endif
 
     {{-- Summary cards (hidden on Share Links / Connections tabs, or when no connections) --}}
@@ -199,14 +199,14 @@
                                         <span class="text-gray-300 dark:text-gray-600">·</span>
                                         {{ $commitDate->format('H:i') }}
                                     </div>
-                                    <a href="{{ $commitUrl }}" target="_blank"
-                                       class="flex-1 min-w-0 text-sm text-gray-700 dark:text-gray-300 hover:underline truncate">
+                                    <button wire:click="selectCommit('{{ $commit['sha'] }}', '{{ $repo['full_name'] }}')"
+                                       class="flex-1 min-w-0 text-sm text-gray-700 dark:text-gray-300 hover:underline truncate text-left">
                                         {{ $message }}
-                                    </a>
-                                    <a href="{{ $commitUrl }}" target="_blank"
+                                    </button>
+                                    <button wire:click="selectCommit('{{ $commit['sha'] }}', '{{ $repo['full_name'] }}')"
                                        class="shrink-0 font-mono text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-500 dark:text-gray-400">
                                         {{ $sha }}
-                                    </a>
+                                    </button>
                                 </div>
                             @endforeach
                         </div>
@@ -265,17 +265,17 @@
                                                     {{ $repoName }}
                                                 </a>
                                             </div>
-                                            <a href="{{ $commitUrl }}" target="_blank"
-                                               class="text-sm text-gray-800 dark:text-gray-200 hover:underline line-clamp-2 break-words">
+                                            <button wire:click="selectCommit('{{ $item['sha'] }}', '{{ $repoName }}')"
+                                               class="text-sm text-gray-800 dark:text-gray-200 hover:underline line-clamp-2 break-words text-left w-full">
                                                 {{ $message }}
-                                            </a>
+                                            </button>
                                         </div>
                                         <div class="flex items-center gap-2 shrink-0 text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                                             <span>{{ $time }}</span>
-                                            <a href="{{ $commitUrl }}" target="_blank"
+                                            <button wire:click="selectCommit('{{ $item['sha'] }}', '{{ $repoName }}')"
                                                class="font-mono bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                                                 {{ $sha }}
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                 @endforeach
@@ -469,5 +469,132 @@
     @endif
 
 </main>
-</div>
 
+{{-- ── Commit detail modal ── --}}
+@if ($selectedCommit !== null)
+    @php
+        $cDetail       = $selectedCommit;
+        $cSha          = $cDetail['sha'];
+        $cShort        = substr($cSha, 0, 7);
+        $cMessage      = trim($cDetail['commit']['message']);
+        $cSubject      = explode("\n", $cMessage)[0];
+        $cBody         = trim(implode("\n", array_slice(explode("\n", $cMessage), 1)));
+        $cAuthor       = $cDetail['commit']['author']['name'];
+        $cDate         = \Carbon\Carbon::parse($cDetail['commit']['author']['date']);
+        $cRepoName     = $cDetail['repository']['full_name'] ?? null;
+        $cRepoUrl      = $cDetail['repository']['html_url'] ?? null;
+        $cUrl          = $cDetail['html_url'];
+        $cStats        = $cDetail['stats'] ?? null;
+        $cFiles        = $cDetail['files'] ?? [];
+    @endphp
+
+    {{-- Backdrop --}}
+    <div wire:click="closeCommit"
+         class="fixed inset-0 bg-black/40 dark:bg-black/60 z-40 backdrop-blur-sm"></div>
+
+    {{-- Panel --}}
+    <div class="fixed inset-y-0 right-0 w-full max-w-xl bg-white dark:bg-gray-900 shadow-2xl z-50 flex flex-col overflow-hidden">
+
+        {{-- Modal header --}}
+        <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-200 dark:border-gray-800 shrink-0">
+            <div class="flex-1 min-w-0">
+                <div class="font-mono text-xs text-gray-400 dark:text-gray-500 mb-0.5">{{ $cShort }}</div>
+                <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{{ $cSubject }}</h2>
+            </div>
+            <button wire:click="closeCommit"
+                    class="shrink-0 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 dark:text-gray-500 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                </svg>
+            </button>
+        </div>
+
+        {{-- Scrollable body --}}
+        <div class="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+
+            {{-- Meta --}}
+            <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+                @if ($cRepoName)
+                    <dt class="text-gray-400 dark:text-gray-500 whitespace-nowrap">Repository</dt>
+                    <dd>
+                        <a href="{{ $cRepoUrl }}" target="_blank"
+                           class="text-indigo-600 dark:text-indigo-400 hover:underline">{{ $cRepoName }}</a>
+                    </dd>
+                @endif
+                <dt class="text-gray-400 dark:text-gray-500 whitespace-nowrap">Author</dt>
+                <dd class="text-gray-700 dark:text-gray-300">{{ $cAuthor }}</dd>
+                <dt class="text-gray-400 dark:text-gray-500 whitespace-nowrap">Date</dt>
+                <dd class="text-gray-700 dark:text-gray-300 tabular-nums">
+                    {{ $cDate->format('D, d M Y H:i:s') }}
+                </dd>
+                <dt class="text-gray-400 dark:text-gray-500 whitespace-nowrap">SHA</dt>
+                <dd class="font-mono text-gray-700 dark:text-gray-300 break-all text-xs">{{ $cSha }}</dd>
+                @if ($cStats)
+                    <dt class="text-gray-400 dark:text-gray-500 whitespace-nowrap">Changes</dt>
+                    <dd class="text-gray-700 dark:text-gray-300">
+                        <span class="text-green-600 dark:text-green-400">+{{ $cStats['additions'] }}</span>
+                        <span class="mx-1 text-gray-300 dark:text-gray-600">/</span>
+                        <span class="text-red-500 dark:text-red-400">-{{ $cStats['deletions'] }}</span>
+                        <span class="ml-1 text-gray-400 dark:text-gray-500">({{ $cStats['total'] }} total)</span>
+                    </dd>
+                @endif
+            </dl>
+
+            {{-- Commit body / description --}}
+            @if ($cBody !== '')
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1.5">Description</h3>
+                    <pre class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-sans leading-relaxed bg-gray-50 dark:bg-gray-800/50 rounded-lg px-4 py-3">{{ $cBody }}</pre>
+                </div>
+            @endif
+
+            {{-- Files changed --}}
+            @if (! empty($cFiles))
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1.5">
+                        Files changed ({{ count($cFiles) }})
+                    </h3>
+                    <div class="rounded-lg border border-gray-200 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800 overflow-hidden">
+                        @foreach ($cFiles as $file)
+                            <div class="px-3 py-2 flex items-center gap-2 text-xs bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                @php
+                                    $statusColor = match($file['status']) {
+                                        'added'    => 'text-green-600 dark:text-green-400',
+                                        'removed'  => 'text-red-500 dark:text-red-400',
+                                        'renamed'  => 'text-amber-600 dark:text-amber-400',
+                                        default    => 'text-blue-600 dark:text-blue-400',
+                                    };
+                                    $statusLabel = match($file['status']) {
+                                        'added'    => 'A',
+                                        'removed'  => 'D',
+                                        'renamed'  => 'R',
+                                        default    => 'M',
+                                    };
+                                @endphp
+                                <span class="shrink-0 font-mono font-bold w-4 {{ $statusColor }}">{{ $statusLabel }}</span>
+                                <span class="flex-1 min-w-0 font-mono text-gray-700 dark:text-gray-300 truncate">{{ $file['filename'] }}</span>
+                                <span class="shrink-0 text-green-600 dark:text-green-400">+{{ $file['additions'] }}</span>
+                                <span class="shrink-0 text-red-500 dark:text-red-400">-{{ $file['deletions'] }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+        </div>
+
+        {{-- Footer --}}
+        <div class="shrink-0 px-5 py-3 border-t border-gray-200 dark:border-gray-800 flex justify-end">
+            <a href="{{ $cUrl }}" target="_blank"
+               class="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 text-sm font-medium transition-colors">
+                View on GitHub
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/>
+                    <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+@endif
+
+</div>
