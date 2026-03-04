@@ -79,28 +79,6 @@
         };
     @endphp
 
-    {{-- Summary cards (hidden on Share Links / Connections tabs, or when no connections) --}}
-    @if ($view !== 'sharing' && $view !== 'connections' && $connections->isNotEmpty())
-    <div class="grid grid-cols-4 gap-4 mb-6">
-        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 text-center">
-            <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ $totalCommits }}</div>
-            <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Commits</div>
-        </div>
-        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 text-center">
-            <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ $totalRepos }}</div>
-            <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Repositories</div>
-        </div>
-        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 text-center">
-            <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ $commitsByDate->count() }}</div>
-            <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Active days</div>
-        </div>
-        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 text-center">
-            <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">~{{ $fmt($totalMinutes) }}</div>
-            <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Est. time</div>
-        </div>
-    </div>
-    @endif
-
     {{-- View toggle tabs --}}
     <div class="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-800">
         @if ($connections->isNotEmpty())
@@ -138,6 +116,28 @@
         </button>
         @endif
     </div>
+
+    {{-- Summary cards (hidden on Share Links / Connections tabs, or when no connections) --}}
+    @if ($view !== 'sharing' && $view !== 'connections' && $connections->isNotEmpty())
+    <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 text-center">
+            <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ $totalCommits }}</div>
+            <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Commits</div>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 text-center">
+            <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ $totalRepos }}</div>
+            <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Repositories</div>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 text-center">
+            <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ $commitsByDate->count() }}</div>
+            <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Active days</div>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 text-center">
+            <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">~{{ $fmt($totalMinutes) }}</div>
+            <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Est. time</div>
+        </div>
+    </div>
+    @endif
 
     {{-- ── By Repository view ── --}}
     @if ($view === 'repositories' && $connections->isNotEmpty())
