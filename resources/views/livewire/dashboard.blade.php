@@ -7,7 +7,7 @@
     <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-4">
         <div class="flex-1">
             <h1 class="text-xl font-semibold"><a href="{{ route('dashboard') }}">Git Dash</a></h1>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Commits by <strong>{{ $username }}</strong></p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">@if($username) Commits by <strong>{{ $username }}</strong> @else Git Dash @endif</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
@@ -17,7 +17,7 @@
                     <select wire:model.live="connection"
                             class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         @foreach ($connections as $conn)
-                            <option value="{{ $conn }}">{{ $conn }}</option>
+                            <option value="{{ $conn->name }}">{{ $conn->label }}</option>
                         @endforeach
                     </select>
                 @endif
@@ -79,8 +79,8 @@
         };
     @endphp
 
-    {{-- Summary cards (hidden on Share Links tab) --}}
-    @if ($view !== 'sharing')
+    {{-- Summary cards (hidden on Share Links / Connections tabs, or when no connections) --}}
+    @if ($view !== 'sharing' && $view !== 'connections' && $connections->isNotEmpty())
     <div class="grid grid-cols-4 gap-4 mb-6">
         <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 text-center">
             <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ $totalCommits }}</div>
@@ -103,6 +103,7 @@
 
     {{-- View toggle tabs --}}
     <div class="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-800">
+        @if ($connections->isNotEmpty())
         <button wire:click="$set('view', 'timeline')"
                 class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
                        {{ $view === 'timeline'
@@ -117,7 +118,9 @@
                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}">
             By Repository
         </button>
+        @endif
         @if ($lockedConnection === null)
+        @if ($connections->isNotEmpty())
         <button wire:click="$set('view', 'sharing')"
                 class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
                        {{ $view === 'sharing'
@@ -126,10 +129,18 @@
             Share Links
         </button>
         @endif
+        <button wire:click="$set('view', 'connections')"
+                class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
+                       {{ $view === 'connections'
+                           ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
+                           : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}">
+            Connections
+        </button>
+        @endif
     </div>
 
     {{-- ── By Repository view ── --}}
-    @if ($view === 'repositories')
+    @if ($view === 'repositories' && $connections->isNotEmpty())
 
         @if ($timeByRepo->isEmpty())
             <div class="text-center py-16 text-gray-400 dark:text-gray-500">
@@ -199,7 +210,7 @@
         @endif
 
     {{-- ── Timeline view ── --}}
-    @elseif ($view === 'timeline')
+    @elseif ($view === 'timeline' && $connections->isNotEmpty())
 
         @forelse ($commitsByDate as $date => $dayData)
             <div class="mb-8">
@@ -295,7 +306,7 @@
                     <select wire:model="newTokenConnection"
                             class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         @foreach ($connections as $conn)
-                            <option value="{{ $conn }}">{{ $conn }}</option>
+                            <option value="{{ $conn->name }}">{{ $conn->label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -334,6 +345,103 @@
                                 class="shrink-0 text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors">
                             Revoke
                         </button>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
+    @endif
+
+    {{-- ── Connections tab (owner only) ── --}}
+    @if ($view === 'connections')
+
+        {{-- Add new connection --}}
+        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 mb-4">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Add connection</h3>
+            <div class="flex flex-wrap items-end gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Name <span class="text-gray-400">(slug, immutable)</span></label>
+                    <input type="text" wire:model="newConnName" placeholder="e.g. work"
+                           class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-36">
+                    @error('newConnName') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Label</label>
+                    <input type="text" wire:model="newConnLabel" placeholder="e.g. Work account"
+                           class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-40">
+                    @error('newConnLabel') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">GitHub token</label>
+                    <input type="password" wire:model="newConnToken" placeholder="ghp_…"
+                           class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-56">
+                    @error('newConnToken') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                </div>
+                <button wire:click="createConnection"
+                        class="rounded-md bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 text-sm font-medium transition-colors">
+                    Add connection
+                </button>
+            </div>
+        </div>
+
+        {{-- Connection list --}}
+        @if ($connections->isEmpty())
+            <p class="text-sm text-gray-400 dark:text-gray-500">No connections yet. Add one above to get started.</p>
+        @else
+            <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
+                @foreach ($connections as $conn)
+                    @php $hasTokens = $shareTokens->where('connection', $conn->name)->isNotEmpty(); @endphp
+                    <div class="px-4 py-3">
+                        @if ($editConnId === $conn->id)
+                            {{-- Inline edit form --}}
+                            <div class="flex flex-wrap items-end gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Label</label>
+                                    <input type="text" wire:model="editConnLabel"
+                                           class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-40">
+                                    @error('editConnLabel') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">New token <span class="text-gray-400">(leave blank to keep current)</span></label>
+                                    <input type="password" wire:model="editConnToken" placeholder="ghp_…"
+                                           class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-56">
+                                    @error('editConnToken') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <button wire:click="saveConnection"
+                                        class="rounded-md bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 text-sm font-medium transition-colors">
+                                    Save
+                                </button>
+                                <button wire:click="cancelEditConnection"
+                                        class="rounded-md border border-gray-300 dark:border-gray-700 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                    Cancel
+                                </button>
+                            </div>
+                        @else
+                            {{-- Read-only row --}}
+                            <div class="flex items-center gap-4">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ $conn->label }}</span>
+                                        <span class="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded px-1.5 py-0.5 font-mono">{{ $conn->name }}</span>
+                                        @if ($hasTokens)
+                                            <span class="text-xs bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded px-1.5 py-0.5">
+                                                {{ $shareTokens->where('connection', $conn->name)->count() }} share {{ Str::plural('link', $shareTokens->where('connection', $conn->name)->count()) }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Added {{ $conn->created_at->diffForHumans() }}</p>
+                                </div>
+                                <button wire:click="editConnection({{ $conn->id }})"
+                                        class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline transition-colors">
+                                    Edit
+                                </button>
+                                <button wire:click="deleteConnection({{ $conn->id }})"
+                                        wire:confirm="{{ $hasTokens ? 'This connection has active share links that will break. Delete anyway?' : 'Delete this connection?' }}"
+                                        class="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors">
+                                    Delete
+                                </button>
+                            </div>
+                        @endif
                     </div>
                 @endforeach
             </div>

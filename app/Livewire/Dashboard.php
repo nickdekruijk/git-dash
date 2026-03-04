@@ -7,6 +7,7 @@ use Github\ResultPager;
 use GrahamCampbell\GitHub\Facades\GitHub;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use App\Models\GithubConnection;
 use App\Models\ShareToken;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -21,7 +22,7 @@ class Dashboard extends Component
     /** Extra minutes added per session for work done before the first commit. */
     private const SESSION_PADDING_MINUTES = 30;
 
-    public string $connection = 'main';
+    public string $connection = '';
     public string $from = '';
     public string $to = '';
     public string $view = 'timeline';
@@ -32,7 +33,17 @@ class Dashboard extends Component
 
     /** New token form fields */
     public string $newTokenLabel = '';
-    public string $newTokenConnection = 'main';
+    public string $newTokenConnection = '';
+
+    /** New connection form fields */
+    public string $newConnName = '';
+    public string $newConnLabel = '';
+    public string $newConnToken = '';
+
+    /** Edit connection fields */
+    public ?int $editConnId = null;
+    public string $editConnLabel = '';
+    public string $editConnToken = '';
 
     public function mount(?string $lockedConnection = null): void
     {
@@ -42,6 +53,16 @@ class Dashboard extends Component
         if ($lockedConnection !== null) {
             $this->lockedConnection = $lockedConnection;
             $this->connection = $lockedConnection;
+        } else {
+            // Default to first available DB connection
+            $first = GithubConnection::orderBy('name')->value('name');
+            if ($first) {
+                $this->connection = $first;
+                $this->newTokenConnection = $first;
+            } else {
+                // No connections yet — land on the Connections tab
+                $this->view = 'connections';
+            }
         }
     }
 
@@ -104,20 +125,96 @@ class Dashboard extends Component
     #[Computed]
     public function connections(): Collection
     {
-        return collect(config('github.connections'))
-            ->filter(fn (array $conn) => ($conn['method'] ?? '') === 'token' && ! empty($conn['token']))
-            ->keys();
+        return GithubConnection::orderBy('label')->get();
+    }
+
+    /** Create a new GitHub connection. */
+    public function createConnection(): void
+    {
+        $this->validate([
+            'newConnName'  => 'required|alpha_dash|unique:github_connections,name',
+            'newConnLabel' => 'required|string|max:100',
+            'newConnToken' => 'required|string',
+        ]);
+
+        GithubConnection::create([
+            'name'  => $this->newConnName,
+            'label' => $this->newConnLabel,
+            'token' => $this->newConnToken,
+        ]);
+
+        $this->newConnName = $this->newConnLabel = $this->newConnToken = '';
+        unset($this->connections);
+    }
+
+    /** Start editing a connection (populate edit fields). */
+    public function editConnection(int $id): void
+    {
+        $conn = GithubConnection::findOrFail($id);
+        $this->editConnId = $id;
+        $this->editConnLabel = $conn->label;
+        $this->editConnToken = ''; // never pre-fill the token
+    }
+
+    /** Cancel inline edit. */
+    public function cancelEditConnection(): void
+    {
+        $this->editConnId = null;
+        $this->editConnLabel = $this->editConnToken = '';
+    }
+
+    /** Persist label (and optionally token) changes for a connection. */
+    public function saveConnection(): void
+    {
+        $this->validate([
+            'editConnLabel' => 'required|string|max:100',
+            'editConnToken' => 'nullable|string',
+        ]);
+
+        $conn = GithubConnection::findOrFail($this->editConnId);
+        $conn->label = $this->editConnLabel;
+        if ($this->editConnToken !== '') {
+            $conn->token = $this->editConnToken;
+        }
+        $conn->save();
+
+        $this->editConnId = null;
+        $this->editConnLabel = $this->editConnToken = '';
+        unset($this->connections);
+    }
+
+    /** Delete a GitHub connection by id. */
+    public function deleteConnection(int $id): void
+    {
+        GithubConnection::destroy($id);
+        unset($this->connections);
+
+        // Reset to first remaining connection
+        $first = GithubConnection::orderBy('name')->value('name');
+        $this->connection = $first ?? '';
+        $this->newTokenConnection = $this->connection;
     }
 
     #[Computed]
     public function username(): string
     {
+        if (! $this->connection) {
+            return '';
+        }
+
+        $this->bootGitHubConnection($this->connection);
+
         return GitHub::connection($this->connection)->currentUser()->show()['login'];
     }
 
     #[Computed]
     public function items(): Collection
     {
+        if (! $this->connection || ! $this->from || ! $this->to) {
+            return collect();
+        }
+
+        $this->bootGitHubConnection($this->connection);
         $client = GitHub::connection($this->connection);
         $pager = new ResultPager($client);
 
@@ -188,6 +285,22 @@ class Dashboard extends Component
             'connections'    => $this->connections,
             'shareTokens'    => $this->lockedConnection === null ? $this->shareTokens : collect(),
         ]);
+    }
+
+    /** Configure the Graham-Campbell GitHub manager from DB at runtime. */
+    private function bootGitHubConnection(string $name): void
+    {
+        if (! $name) {
+            return;
+        }
+
+        $token = GithubConnection::where('name', $name)->value('token');
+
+        config(['github.connections.' . $name => [
+            'method' => 'token',
+            'token'  => $token,
+            'cache'  => 'main',
+        ]]);
     }
 
     /**
