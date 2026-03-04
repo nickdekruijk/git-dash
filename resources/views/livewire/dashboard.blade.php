@@ -127,7 +127,7 @@
         @endif
 
         {{-- View tabs (only shown when there is more than one tab to choose from) --}}
-        @if ($connections->isNotEmpty() && !$lockedRepository)
+        @if ($connections->isNotEmpty() && !$lockedRepository && $view !== 'sharing' && $view !== 'connections')
             <div class="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-800">
                 <button wire:click="$set('view', 'timeline')"
                     class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
