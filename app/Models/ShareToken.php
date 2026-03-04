@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class ShareToken extends Model
 {
-    protected $fillable = ['token', 'connection', 'label'];
+    protected $fillable = ['token', 'connection', 'repository', 'label'];
 }

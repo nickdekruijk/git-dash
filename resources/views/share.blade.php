@@ -10,7 +10,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen font-[Instrument_Sans,sans-serif]">
-    @livewire('dashboard', ['lockedConnection' => $shareToken->connection])
+    @livewire('dashboard', ['lockedConnection' => $shareToken->connection, 'lockedRepository' => $shareToken->repository])
     @livewireScripts
 </body>
 </html>

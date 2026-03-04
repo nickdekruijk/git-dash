@@ -31,9 +31,13 @@ class Dashboard extends Component
     /** When set, the user can only view this connection (share link mode). */
     public ?string $lockedConnection = null;
 
+    /** When set, only commits for this repository are shown (share link mode). */
+    public ?string $lockedRepository = null;
+
     /** New token form fields */
     public string $newTokenLabel = '';
     public string $newTokenConnection = '';
+    public string $newTokenRepository = '';
 
     /** New connection form fields */
     public string $newConnName = '';
@@ -45,13 +49,14 @@ class Dashboard extends Component
     public string $editConnLabel = '';
     public string $editConnToken = '';
 
-    public function mount(?string $lockedConnection = null): void
+    public function mount(?string $lockedConnection = null, ?string $lockedRepository = null): void
     {
         $this->from = now()->subDays(30)->toDateString();
         $this->to = now()->toDateString();
 
         if ($lockedConnection !== null) {
             $this->lockedConnection = $lockedConnection;
+            $this->lockedRepository = $lockedRepository;
             $this->connection = $lockedConnection;
         } else {
             // Default to first available DB connection
@@ -96,16 +101,25 @@ class Dashboard extends Component
         }
     }
 
+    /** Bust repo list cache when the share form connection changes. */
+    public function updatedNewTokenConnection(): void
+    {
+        unset($this->newTokenRepositories);
+        $this->newTokenRepository = '';
+    }
+
     /** Generate a new share token. */
     public function createToken(): void
     {
         ShareToken::create([
             'token'      => Str::random(32),
             'connection' => $this->newTokenConnection,
+            'repository' => $this->newTokenRepository ?: null,
             'label'      => $this->newTokenLabel ?: null,
         ]);
 
         $this->newTokenLabel = '';
+        $this->newTokenRepository = '';
         unset($this->shareTokens); // bust computed cache
     }
 
@@ -114,6 +128,23 @@ class Dashboard extends Component
     {
         ShareToken::destroy($id);
         unset($this->shareTokens);
+    }
+
+    #[Computed]
+    public function newTokenRepositories(): Collection
+    {
+        if (! $this->newTokenConnection) {
+            return collect();
+        }
+
+        $this->bootGitHubConnection($this->newTokenConnection);
+        $client = GitHub::connection($this->newTokenConnection);
+        $pager = new ResultPager($client);
+
+        return collect($pager->fetchAll($client->api('me'), 'repositories', ['all', 'full_name', 'asc']))
+            ->pluck('full_name')
+            ->sort()
+            ->values();
     }
 
     #[Computed]
@@ -218,8 +249,13 @@ class Dashboard extends Component
         $client = GitHub::connection($this->connection);
         $pager = new ResultPager($client);
 
+        $query = "author:{$this->username} author-date:{$this->from}..{$this->to}";
+        if ($this->lockedRepository) {
+            $query .= " repo:{$this->lockedRepository}";
+        }
+
         return collect($pager->fetchAll($client->api('search'), 'commits', [
-            "author:{$this->username} author-date:{$this->from}..{$this->to}",
+            $query,
             'author-date',
             'desc',
         ]));
@@ -278,14 +314,14 @@ class Dashboard extends Component
         $needsData = in_array($this->view, ['timeline', 'repositories']);
 
         return view('livewire.dashboard', [
-            'commitsByDate'  => $needsData ? $this->commitsByDate : collect(),
-            'timeByRepo'     => $needsData ? $this->timeByRepo : collect(),
-            'totalCommits'   => $needsData ? $this->totalCommits : 0,
-            'totalRepos'     => $needsData ? $this->totalRepos : 0,
-            'totalMinutes'   => $needsData ? $this->totalMinutes : 0,
-            'username'       => $this->username,
-            'connections'    => $this->connections,
-            'shareTokens'    => $this->lockedConnection === null ? $this->shareTokens : collect(),
+            'commitsByDate'       => $needsData ? $this->commitsByDate : collect(),
+            'timeByRepo'          => $needsData ? $this->timeByRepo : collect(),
+            'totalCommits'        => $needsData ? $this->totalCommits : 0,
+            'totalRepos'          => $needsData ? $this->totalRepos : 0,
+            'totalMinutes'        => $needsData ? $this->totalMinutes : 0,
+            'connections'         => $this->connections,
+            'shareTokens'         => $this->lockedConnection === null ? $this->shareTokens : collect(),
+            'newTokenRepositories' => $this->view === 'sharing' ? $this->newTokenRepositories : collect(),
         ]);
     }
 

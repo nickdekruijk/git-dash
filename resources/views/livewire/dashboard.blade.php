@@ -4,55 +4,37 @@
 
 {{-- Header --}}
 <header class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-10">
-    <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-4">
-        <div class="flex-1">
-            <h1 class="text-xl font-semibold"><a href="{{ route('dashboard') }}">Git Dash</a></h1>
-            <p class="text-sm text-gray-500 dark:text-gray-400">@if($username) Commits by <strong>{{ $username }}</strong> @else Git Dash @endif</p>
-        </div>
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-4">
+        <h1 class="text-xl font-semibold shrink-0"><a href="{{ route('dashboard') }}">Git Dash</a></h1>
 
-        <div class="flex flex-wrap items-center gap-2">
-            {{-- Connection selector (owner only) --}}
-            @if ($lockedConnection === null)
-                @if ($connections->count() > 1)
-                    <select wire:model.live="connection"
-                            class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        @foreach ($connections as $conn)
-                            <option value="{{ $conn->name }}">{{ $conn->label }}</option>
-                        @endforeach
-                    </select>
-                @endif
-            @else
-                {{-- Share mode badge --}}
-                <span class="text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-full px-3 py-1">
-                    Shared view · {{ $lockedConnection }}
-                </span>
+        <div class="flex-1"></div>
+
+        {{-- Share mode badge --}}
+        @if ($lockedConnection !== null)
+            <span class="text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-full px-3 py-1">
+                Shared view · {{ $lockedConnection }}{{ $lockedRepository ? ' · ' . $lockedRepository : '' }}
+            </span>
+        @endif
+
+        @if ($lockedConnection === null)
+            {{-- Share Links + Connections nav buttons --}}
+            @if ($connections->isNotEmpty())
+            <button wire:click="$set('view', 'sharing')"
+                    class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
+                           {{ $view === 'sharing'
+                               ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400'
+                               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800' }}">
+                Share Links
+            </button>
             @endif
+            <button wire:click="$set('view', 'connections')"
+                    class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
+                           {{ $view === 'connections'
+                               ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400'
+                               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800' }}">
+                Connections
+            </button>
 
-            {{-- Preset selector — shown in both modes --}}
-            <select wire:model.live="preset"
-                    class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">Quick select…</option>
-                <option value="this_week">This week</option>
-                <option value="last_week">Last week</option>
-                <option value="this_month">This month</option>
-                <option value="last_month">Last month</option>
-                <option value="last_7">Last 7 days</option>
-                <option value="last_30">Last 30 days</option>
-                <option value="last_90">Last 90 days</option>
-                <option value="this_year">This year</option>
-                <option value="last_year">Last year</option>
-                <option value="this_quarter">This quarter</option>
-                <option value="last_quarter">Last quarter</option>
-            </select>
-
-            {{-- Date range — shown in both modes --}}
-            <input type="date" wire:model.live="from"
-                   class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <span class="text-gray-400 text-sm">to</span>
-            <input type="date" wire:model.live="to"
-                   class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-
-            @if ($lockedConnection === null)
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit"
@@ -60,8 +42,7 @@
                     Sign out
                 </button>
             </form>
-            @endif
-        </div>
+        @endif
     </div>
 </header>
 
@@ -79,9 +60,47 @@
         };
     @endphp
 
-    {{-- View toggle tabs --}}
+    {{-- Filters row (hidden on Share Links / Connections tabs) --}}
+    @if ($view !== 'sharing' && $view !== 'connections')
+    <div class="flex flex-wrap items-center gap-2 mb-3">
+        {{-- Connection selector --}}
+        @if ($lockedConnection === null && $connections->count() > 1)
+            <select wire:model.live="connection"
+                    class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                @foreach ($connections as $conn)
+                    <option value="{{ $conn->name }}">{{ $conn->label }}</option>
+                @endforeach
+            </select>
+        @endif
+
+        {{-- Preset selector --}}
+        <select wire:model.live="preset"
+                class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">Quick select…</option>
+            <option value="this_week">This week</option>
+            <option value="last_week">Last week</option>
+            <option value="this_month">This month</option>
+            <option value="last_month">Last month</option>
+            <option value="last_7">Last 7 days</option>
+            <option value="last_30">Last 30 days</option>
+            <option value="last_90">Last 90 days</option>
+            <option value="this_year">This year</option>
+            <option value="last_year">Last year</option>
+            <option value="this_quarter">This quarter</option>
+            <option value="last_quarter">Last quarter</option>
+        </select>
+
+        {{-- Date range --}}
+        <input type="date" wire:model.live="from"
+               class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <span class="text-gray-400 text-sm">to</span>
+        <input type="date" wire:model.live="to"
+               class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    </div>
+
+    {{-- View tabs (only shown when there is more than one tab to choose from) --}}
+    @if ($connections->isNotEmpty() && ! $lockedRepository)
     <div class="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-800">
-        @if ($connections->isNotEmpty())
         <button wire:click="$set('view', 'timeline')"
                 class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
                        {{ $view === 'timeline'
@@ -96,38 +115,23 @@
                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}">
             By Repository
         </button>
-        @endif
-        @if ($lockedConnection === null)
-        @if ($connections->isNotEmpty())
-        <button wire:click="$set('view', 'sharing')"
-                class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
-                       {{ $view === 'sharing'
-                           ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
-                           : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}">
-            Share Links
-        </button>
-        @endif
-        <button wire:click="$set('view', 'connections')"
-                class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
-                       {{ $view === 'connections'
-                           ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
-                           : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}">
-            Connections
-        </button>
-        @endif
     </div>
+    @endif
+    @endif
 
     {{-- Summary cards (hidden on Share Links / Connections tabs, or when no connections) --}}
     @if ($view !== 'sharing' && $view !== 'connections' && $connections->isNotEmpty())
-    <div class="grid grid-cols-4 gap-4 mb-6">
+    <div class="grid @if($lockedRepository) grid-cols-3 @else grid-cols-4 @endif gap-4 mb-6">
         <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 text-center">
             <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ $totalCommits }}</div>
             <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Commits</div>
         </div>
+        @if (! $lockedRepository)
         <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 text-center">
             <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ $totalRepos }}</div>
             <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Repositories</div>
         </div>
+        @endif
         <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 text-center">
             <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ $commitsByDate->count() }}</div>
             <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Active days</div>
@@ -294,12 +298,12 @@
 
         {{-- Create new token --}}
         <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 mb-4">
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Generate a link to share a read-only view of a specific connection.</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Generate a read-only share link, optionally scoped to a single repository.</p>
             <div class="flex flex-wrap items-end gap-3">
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Label (optional)</label>
                     <input type="text" wire:model="newTokenLabel" placeholder="e.g. John's view"
-                           class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-48">
+                           class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-44">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Connection</label>
@@ -307,6 +311,16 @@
                             class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         @foreach ($connections as $conn)
                             <option value="{{ $conn->name }}">{{ $conn->label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Repository <span class="text-gray-400">(optional)</span></label>
+                    <select wire:model="newTokenRepository"
+                            class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-56">
+                        <option value="">All repositories</option>
+                        @foreach ($newTokenRepositories as $repo)
+                            <option value="{{ $repo }}">{{ $repo }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -325,12 +339,15 @@
                 @foreach ($shareTokens as $st)
                     <div class="px-4 py-3 flex items-center gap-4">
                         <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 flex-wrap">
                                 @if ($st->label)
                                     <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ $st->label }}</span>
                                     <span class="text-xs text-gray-400">·</span>
                                 @endif
                                 <span class="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded px-1.5 py-0.5">{{ $st->connection }}</span>
+                                @if ($st->repository)
+                                    <span class="text-xs bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 rounded px-1.5 py-0.5 font-mono">{{ $st->repository }}</span>
+                                @endif
                             </div>
                             <div class="flex items-center gap-2 mt-1">
                                 <input type="text" readonly
