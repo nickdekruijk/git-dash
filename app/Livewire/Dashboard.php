@@ -320,7 +320,7 @@ class Dashboard extends Component
             $query .= " repo:{$this->lockedRepository}";
         }
 
-        $cacheKey = 'commits:' . md5($query);
+        $cacheKey = 'commits:' . $this->connection . ':' . md5($query);
 
         return Cache::remember($cacheKey, now()->addHour(), function () use ($pager, $client, $query) {
             return collect($pager->fetchAll($client->api('search'), 'commits', [
