@@ -11,6 +11,7 @@ A personal GitHub commit dashboard that shows all your commits across every repo
 - Multiple GitHub connections (personal + organization accounts)
 - Shareable read-only links (optionally scoped to a single repository)
 - Date range filters with quick presets
+- GitHub API response caching to minimise API calls
 - Dark mode support
 
 ## Requirements
@@ -99,6 +100,10 @@ For classic tokens, the `repo` scope is sufficient.
 ## Share Links
 
 From the **Share Links** page you can generate read-only URLs to share your commit history with others. Links can optionally be scoped to a single repository.
+
+## Caching
+
+GitHub API responses (commits, repository lists, user info) are cached for **1 hour** by default to reduce the number of API calls made. If you need fresh data before the cache expires, use the **Clear Cache** option in the dropdown menu in the top-right corner of the dashboard.
 
 ## Tech Stack
 
