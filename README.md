@@ -1,59 +1,113 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Git Dash
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A personal GitHub commit dashboard that shows all your commits across every repository and organization you have access to — with time estimation, filtering by date range, shareable links, and support for multiple GitHub accounts.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- View commits across all repositories and organizations
+- Timeline view grouped by day and work session
+- By Repository view with time breakdown
+- Estimated time worked per session and repository
+- Multiple GitHub connections (personal + organization accounts)
+- Shareable read-only links (optionally scoped to a single repository)
+- Date range filters with quick presets
+- Dark mode support
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Requirements
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.2 or higher (8.4 recommended)
+- Composer
+- Node.js & npm
+- A MySQL, PostgreSQL or SQLite database
+- A GitHub Personal Access Token
 
-## Learning Laravel
+## Installation
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+**1. Clone the repository**
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+git clone https://github.com/nickdekruijk/git-dash.git
+cd git-dash
+```
 
-## Laravel Sponsors
+**2. Install dependencies**
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+composer install
+npm install
+npm run build
+```
 
-### Premium Partners
+**3. Configure the environment**
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-## Contributing
+Open `.env` and set the following:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```env
+APP_URL=http://your-local-url
 
-## Code of Conduct
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=git_dash
+DB_USERNAME=your_db_user
+DB_PASSWORD=your_db_password
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Password to protect your dashboard
+DASHBOARD_PASSWORD=your_secret_password
+```
 
-## Security Vulnerabilities
+**4. Run migrations**
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan migrate
+```
+
+**5. Serve the app**
+
+```bash
+php artisan serve
+```
+
+Or use [Laravel Herd](https://herd.laravel.com/) / Valet for a local domain.
+
+## Adding a GitHub Connection
+
+Once the dashboard is running, open it in your browser and navigate to **Connections** (via the menu in the top right). Add a connection with:
+
+- **Name** — a short identifier (e.g. `personal`)
+- **Label** — display name shown in the UI
+- **Token** — a GitHub Personal Access Token
+
+### Creating a GitHub Personal Access Token
+
+1. Go to [GitHub → Settings → Developer Settings → Personal access tokens → Fine-grained tokens](https://github.com/settings/tokens)
+2. Click **Generate new token**
+3. Set a name and expiration
+4. Under **Permissions**, grant:
+   - **Contents**: Read-only (to read commit data)
+   - **Metadata**: Read-only (required)
+5. Under **Repository access**, choose **All repositories** (to see commits across all repos)
+6. Click **Generate token** and copy it into the dashboard
+
+For classic tokens, the `repo` scope is sufficient.
+
+## Share Links
+
+From the **Share Links** page you can generate read-only URLs to share your commit history with others. Links can optionally be scoped to a single repository.
+
+## Tech Stack
+
+- [Laravel 12](https://laravel.com)
+- [Livewire 4](https://livewire.laravel.com)
+- [Tailwind CSS 4](https://tailwindcss.com)
+- [Alpine.js](https://alpinejs.dev)
+- [knplabs/github-api](https://github.com/KnpLabs/php-github-api)
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+MIT
