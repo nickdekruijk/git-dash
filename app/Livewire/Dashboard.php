@@ -284,6 +284,12 @@ class Dashboard extends Component
         $this->selectedCommit = null;
     }
 
+    public function clearCache(): void
+    {
+        Cache::flush();
+        unset($this->username, $this->items, $this->newTokenRepositories);
+    }
+
     #[Computed]
     public function username(): string
     {
