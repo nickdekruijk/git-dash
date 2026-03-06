@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Github\ResultPager;
 use GrahamCampbell\GitHub\Facades\GitHub;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use App\Models\GithubConnection;
 use App\Models\ShareToken;
@@ -169,10 +170,14 @@ class Dashboard extends Component
         $client = GitHub::connection($this->newTokenConnection);
         $pager = new ResultPager($client);
 
-        return collect($pager->fetchAll($client->api('me'), 'repositories', ['all', 'full_name', 'asc']))
-            ->pluck('full_name')
-            ->sort()
-            ->values();
+        $cacheKey = 'repos:' . $this->newTokenConnection;
+
+        return Cache::remember($cacheKey, now()->addHour(), function () use ($pager, $client) {
+            return collect($pager->fetchAll($client->api('me'), 'repositories', ['all', 'full_name', 'asc']))
+                ->pluck('full_name')
+                ->sort()
+                ->values();
+        });
     }
 
     #[Computed]
@@ -288,7 +293,9 @@ class Dashboard extends Component
 
         $this->bootGitHubConnection($this->connection);
 
-        return GitHub::connection($this->connection)->currentUser()->show()['login'];
+        return Cache::remember('username:' . $this->connection, now()->addHour(), function () {
+            return GitHub::connection($this->connection)->currentUser()->show()['login'];
+        });
     }
 
     #[Computed]
@@ -307,11 +314,15 @@ class Dashboard extends Component
             $query .= " repo:{$this->lockedRepository}";
         }
 
-        return collect($pager->fetchAll($client->api('search'), 'commits', [
-            $query,
-            'author-date',
-            'desc',
-        ]));
+        $cacheKey = 'commits:' . md5($query);
+
+        return Cache::remember($cacheKey, now()->addHour(), function () use ($pager, $client, $query) {
+            return collect($pager->fetchAll($client->api('search'), 'commits', [
+                $query,
+                'author-date',
+                'desc',
+            ]));
+        });
     }
 
     #[Computed]
