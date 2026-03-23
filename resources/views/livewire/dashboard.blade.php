@@ -467,8 +467,8 @@
                                         class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline transition-colors">
                                         Edit
                                     </button>
-                                    <button type="button" wire:click="deleteConnection({{ $conn->id }})"
-                                        wire:confirm="{{ $hasTokens ? 'This connection has active share links that will break. Delete anyway?' : 'Delete this connection?' }}"
+                                    <button type="button"
+                                        x-on:click="if (confirm('{{ $hasTokens ? 'This connection has active share links that will break. Delete anyway?' : 'Delete this connection?' }}')) $wire.deleteConnection({{ $conn->id }})"
                                         class="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors">
                                         Delete
                                     </button>
