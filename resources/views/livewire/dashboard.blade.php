@@ -13,37 +13,37 @@
             {{-- Filters inline in header --}}
             {{-- Filters (hidden on Share Links / Connections pages) --}}
             @if ($view !== 'sharing' && $view !== 'connections')
-            <div class="flex items-center gap-2">
-                <select wire:model.live="preset"
-                    class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value="">Quick select…</option>
-                    <option value="this_week">This week</option>
-                    <option value="last_week">Last week</option>
-                    <option value="this_month">This month</option>
-                    <option value="last_month">Last month</option>
-                    <option value="last_7">Last 7 days</option>
-                    <option value="last_30">Last 30 days</option>
-                    <option value="last_90">Last 90 days</option>
-                    <option value="this_year">This year</option>
-                    <option value="last_year">Last year</option>
-                    <option value="this_quarter">This quarter</option>
-                    <option value="last_quarter">Last quarter</option>
-                </select>
-                <input type="date" wire:model.live="from"
-                    class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <span class="text-gray-400 text-sm">to</span>
-                <input type="date" wire:model.live="to"
-                    class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-
-                @if ($lockedConnection === null && $connections->count() > 1)
-                    <select wire:model.live="connection"
+                <div class="flex items-center gap-2">
+                    <select wire:model.live="preset"
                         class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        @foreach ($connections as $conn)
-                            <option value="{{ $conn->name }}">{{ $conn->label }}</option>
-                        @endforeach
+                        <option value="">Quick select…</option>
+                        <option value="this_week">This week</option>
+                        <option value="last_week">Last week</option>
+                        <option value="this_month">This month</option>
+                        <option value="last_month">Last month</option>
+                        <option value="last_7">Last 7 days</option>
+                        <option value="last_30">Last 30 days</option>
+                        <option value="last_90">Last 90 days</option>
+                        <option value="this_year">This year</option>
+                        <option value="last_year">Last year</option>
+                        <option value="this_quarter">This quarter</option>
+                        <option value="last_quarter">Last quarter</option>
                     </select>
-                @endif
-            </div>
+                    <input type="date" wire:model.live="from"
+                        class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <span class="text-gray-400 text-sm">to</span>
+                    <input type="date" wire:model.live="to"
+                        class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+
+                    @if ($lockedConnection === null && $connections->count() > 1)
+                        <select wire:model.live="connection"
+                            class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            @foreach ($connections as $conn)
+                                <option value="{{ $conn->name }}">{{ $conn->label }}</option>
+                            @endforeach
+                        </select>
+                    @endif
+                </div>
             @endif
 
             {{-- Share mode badge --}}
@@ -201,17 +201,17 @@
                                     <div class="px-4 py-2.5 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-800/30 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                         <button wire:click="selectCommit('{{ $commit['sha'] }}', '{{ $repo['full_name'] }}')"
                                             class="contents">
-                                        <div class="shrink-0 text-xs text-gray-400 dark:text-gray-500 w-36 tabular-nums">
-                                            {{ $commitDate->format('D M j') }}
-                                            <span class="text-gray-300 dark:text-gray-600">·</span>
-                                            {{ $commitDate->format('H:i') }}
-                                        </div>
-                                        <span class="flex-1 min-w-0 text-sm text-gray-700 dark:text-gray-300 truncate text-left">
-                                            {{ $message }}
-                                        </span>
-                                        <span class="shrink-0 font-mono text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 dark:text-gray-400">
-                                            {{ $sha }}
-                                        </span>
+                                            <div class="shrink-0 text-xs text-gray-400 dark:text-gray-500 w-36 tabular-nums">
+                                                {{ $commitDate->format('D M j') }}
+                                                <span class="text-gray-300 dark:text-gray-600">·</span>
+                                                {{ $commitDate->format('H:i') }}
+                                            </div>
+                                            <span class="flex-1 min-w-0 text-sm text-gray-700 dark:text-gray-300 truncate text-left">
+                                                {{ $message }}
+                                            </span>
+                                            <span class="shrink-0 font-mono text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 dark:text-gray-400">
+                                                {{ $sha }}
+                                            </span>
                                         </button>
                                     </div>
                                 @endforeach
@@ -419,7 +419,7 @@
                 <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
                     @foreach ($connections as $conn)
                         @php $hasTokens = $shareTokens->where('connection', $conn->name)->isNotEmpty(); @endphp
-                        <div class="px-4 py-3">
+                        <div wire:key="conn-{{ $conn->id }}" class="px-4 py-3">
                             @if ($editConnId === $conn->id)
                                 {{-- Inline edit form --}}
                                 <div class="flex flex-wrap items-end gap-3">
@@ -439,11 +439,11 @@
                                             <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                                         @enderror
                                     </div>
-                                    <button wire:click="saveConnection"
+                                    <button type="button" wire:click="saveConnection"
                                         class="rounded-md bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 text-sm font-medium transition-colors">
                                         Save
                                     </button>
-                                    <button wire:click="cancelEditConnection"
+                                    <button type="button" wire:click="cancelEditConnection"
                                         class="rounded-md border border-gray-300 dark:border-gray-700 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                         Cancel
                                     </button>
@@ -463,11 +463,11 @@
                                         </div>
                                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Added {{ $conn->created_at->diffForHumans() }}</p>
                                     </div>
-                                    <button wire:click="editConnection({{ $conn->id }})"
+                                    <button type="button" wire:click="editConnection({{ $conn->id }})"
                                         class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline transition-colors">
                                         Edit
                                     </button>
-                                    <button wire:click="deleteConnection({{ $conn->id }})"
+                                    <button type="button" wire:click="deleteConnection({{ $conn->id }})"
                                         wire:confirm="{{ $hasTokens ? 'This connection has active share links that will break. Delete anyway?' : 'Delete this connection?' }}"
                                         class="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors">
                                         Delete
@@ -502,113 +502,113 @@
         @endphp
 
         <div x-data="{ open: true }">
-        {{-- Backdrop --}}
-        <div x-show="open" @click="open = false; $wire.closeCommit()"
-            class="fixed inset-0 bg-black/40 dark:bg-black/60 z-40 backdrop-blur-sm"></div>
+            {{-- Backdrop --}}
+            <div x-show="open" @click="open = false; $wire.closeCommit()"
+                class="fixed inset-0 bg-black/40 dark:bg-black/60 z-40 backdrop-blur-sm"></div>
 
-        {{-- Panel --}}
-        <div x-show="open" class="fixed inset-y-0 right-0 w-full max-w-xl bg-white dark:bg-gray-900 shadow-2xl z-50 flex flex-col overflow-hidden">
+            {{-- Panel --}}
+            <div x-show="open" class="fixed inset-y-0 right-0 w-full max-w-xl bg-white dark:bg-gray-900 shadow-2xl z-50 flex flex-col overflow-hidden">
 
-            {{-- Modal header --}}
-            <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-200 dark:border-gray-800 shrink-0">
-                <div class="flex-1 min-w-0">
-                    <div class="font-mono text-xs text-gray-400 dark:text-gray-500 mb-0.5">{{ $cShort }}</div>
-                    <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{{ $cSubject }}</h2>
+                {{-- Modal header --}}
+                <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-200 dark:border-gray-800 shrink-0">
+                    <div class="flex-1 min-w-0">
+                        <div class="font-mono text-xs text-gray-400 dark:text-gray-500 mb-0.5">{{ $cShort }}</div>
+                        <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{{ $cSubject }}</h2>
+                    </div>
+                    <button @click="open = false; $wire.closeCommit()"
+                        class="shrink-0 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 dark:text-gray-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
                 </div>
-                <button @click="open = false; $wire.closeCommit()"
-                    class="shrink-0 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 dark:text-gray-500 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                </button>
-            </div>
 
-            {{-- Scrollable body --}}
-            <div class="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+                {{-- Scrollable body --}}
+                <div class="flex-1 overflow-y-auto px-5 py-4 space-y-5">
 
-                {{-- Meta --}}
-                <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-                    @if ($cRepoName)
-                        <dt class="text-gray-400 dark:text-gray-500 whitespace-nowrap">Repository</dt>
-                        <dd>
-                            <a href="{{ $cRepoUrl }}" target="_blank"
-                                class="text-indigo-600 dark:text-indigo-400 hover:underline">{{ $cRepoName }}</a>
+                    {{-- Meta --}}
+                    <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+                        @if ($cRepoName)
+                            <dt class="text-gray-400 dark:text-gray-500 whitespace-nowrap">Repository</dt>
+                            <dd>
+                                <a href="{{ $cRepoUrl }}" target="_blank"
+                                    class="text-indigo-600 dark:text-indigo-400 hover:underline">{{ $cRepoName }}</a>
+                            </dd>
+                        @endif
+                        <dt class="text-gray-400 dark:text-gray-500 whitespace-nowrap">Author</dt>
+                        <dd class="text-gray-700 dark:text-gray-300">{{ $cAuthor }}</dd>
+                        <dt class="text-gray-400 dark:text-gray-500 whitespace-nowrap">Date</dt>
+                        <dd class="text-gray-700 dark:text-gray-300 tabular-nums">
+                            {{ $cDate->format('D, d M Y H:i:s') }}
                         </dd>
-                    @endif
-                    <dt class="text-gray-400 dark:text-gray-500 whitespace-nowrap">Author</dt>
-                    <dd class="text-gray-700 dark:text-gray-300">{{ $cAuthor }}</dd>
-                    <dt class="text-gray-400 dark:text-gray-500 whitespace-nowrap">Date</dt>
-                    <dd class="text-gray-700 dark:text-gray-300 tabular-nums">
-                        {{ $cDate->format('D, d M Y H:i:s') }}
-                    </dd>
-                    <dt class="text-gray-400 dark:text-gray-500 whitespace-nowrap">SHA</dt>
-                    <dd class="font-mono text-gray-700 dark:text-gray-300 break-all text-xs">{{ $cSha }}</dd>
-                    @if ($cStats)
-                        <dt class="text-gray-400 dark:text-gray-500 whitespace-nowrap">Changes</dt>
-                        <dd class="text-gray-700 dark:text-gray-300">
-                            <span class="text-green-600 dark:text-green-400">+{{ $cStats['additions'] }}</span>
-                            <span class="mx-1 text-gray-300 dark:text-gray-600">/</span>
-                            <span class="text-red-500 dark:text-red-400">-{{ $cStats['deletions'] }}</span>
-                            <span class="ml-1 text-gray-400 dark:text-gray-500">({{ $cStats['total'] }} total)</span>
-                        </dd>
-                    @endif
-                </dl>
+                        <dt class="text-gray-400 dark:text-gray-500 whitespace-nowrap">SHA</dt>
+                        <dd class="font-mono text-gray-700 dark:text-gray-300 break-all text-xs">{{ $cSha }}</dd>
+                        @if ($cStats)
+                            <dt class="text-gray-400 dark:text-gray-500 whitespace-nowrap">Changes</dt>
+                            <dd class="text-gray-700 dark:text-gray-300">
+                                <span class="text-green-600 dark:text-green-400">+{{ $cStats['additions'] }}</span>
+                                <span class="mx-1 text-gray-300 dark:text-gray-600">/</span>
+                                <span class="text-red-500 dark:text-red-400">-{{ $cStats['deletions'] }}</span>
+                                <span class="ml-1 text-gray-400 dark:text-gray-500">({{ $cStats['total'] }} total)</span>
+                            </dd>
+                        @endif
+                    </dl>
 
-                {{-- Commit body / description --}}
-                @if ($cBody !== '')
-                    <div>
-                        <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1.5">Description</h3>
-                        <pre class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-sans leading-relaxed bg-gray-50 dark:bg-gray-800/50 rounded-lg px-4 py-3">{{ $cBody }}</pre>
-                    </div>
-                @endif
-
-                {{-- Files changed --}}
-                @if (!empty($cFiles))
-                    <div>
-                        <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1.5">
-                            Files changed ({{ count($cFiles) }})
-                        </h3>
-                        <div class="rounded-lg border border-gray-200 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800 overflow-hidden">
-                            @foreach ($cFiles as $file)
-                                <div class="px-3 py-2 flex items-center gap-2 text-xs bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                    @php
-                                        $statusColor = match ($file['status']) {
-                                            'added' => 'text-green-600 dark:text-green-400',
-                                            'removed' => 'text-red-500 dark:text-red-400',
-                                            'renamed' => 'text-amber-600 dark:text-amber-400',
-                                            default => 'text-blue-600 dark:text-blue-400',
-                                        };
-                                        $statusLabel = match ($file['status']) {
-                                            'added' => 'A',
-                                            'removed' => 'D',
-                                            'renamed' => 'R',
-                                            default => 'M',
-                                        };
-                                    @endphp
-                                    <span class="shrink-0 font-mono font-bold w-4 {{ $statusColor }}">{{ $statusLabel }}</span>
-                                    <span class="flex-1 min-w-0 font-mono text-gray-700 dark:text-gray-300 truncate">{{ $file['filename'] }}</span>
-                                    <span class="shrink-0 text-green-600 dark:text-green-400">+{{ $file['additions'] }}</span>
-                                    <span class="shrink-0 text-red-500 dark:text-red-400">-{{ $file['deletions'] }}</span>
-                                </div>
-                            @endforeach
+                    {{-- Commit body / description --}}
+                    @if ($cBody !== '')
+                        <div>
+                            <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1.5">Description</h3>
+                            <pre class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-sans leading-relaxed bg-gray-50 dark:bg-gray-800/50 rounded-lg px-4 py-3">{{ $cBody }}</pre>
                         </div>
-                    </div>
-                @endif
+                    @endif
 
-            </div>
+                    {{-- Files changed --}}
+                    @if (!empty($cFiles))
+                        <div>
+                            <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1.5">
+                                Files changed ({{ count($cFiles) }})
+                            </h3>
+                            <div class="rounded-lg border border-gray-200 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800 overflow-hidden">
+                                @foreach ($cFiles as $file)
+                                    <div class="px-3 py-2 flex items-center gap-2 text-xs bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                        @php
+                                            $statusColor = match ($file['status']) {
+                                                'added' => 'text-green-600 dark:text-green-400',
+                                                'removed' => 'text-red-500 dark:text-red-400',
+                                                'renamed' => 'text-amber-600 dark:text-amber-400',
+                                                default => 'text-blue-600 dark:text-blue-400',
+                                            };
+                                            $statusLabel = match ($file['status']) {
+                                                'added' => 'A',
+                                                'removed' => 'D',
+                                                'renamed' => 'R',
+                                                default => 'M',
+                                            };
+                                        @endphp
+                                        <span class="shrink-0 font-mono font-bold w-4 {{ $statusColor }}">{{ $statusLabel }}</span>
+                                        <span class="flex-1 min-w-0 font-mono text-gray-700 dark:text-gray-300 truncate">{{ $file['filename'] }}</span>
+                                        <span class="shrink-0 text-green-600 dark:text-green-400">+{{ $file['additions'] }}</span>
+                                        <span class="shrink-0 text-red-500 dark:text-red-400">-{{ $file['deletions'] }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
 
-            {{-- Footer --}}
-            <div class="shrink-0 px-5 py-3 border-t border-gray-200 dark:border-gray-800 flex justify-end">
-                <a href="{{ $cUrl }}" target="_blank"
-                    class="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 text-sm font-medium transition-colors">
-                    View on GitHub
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                        <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
-                    </svg>
-                </a>
+                </div>
+
+                {{-- Footer --}}
+                <div class="shrink-0 px-5 py-3 border-t border-gray-200 dark:border-gray-800 flex justify-end">
+                    <a href="{{ $cUrl }}" target="_blank"
+                        class="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 text-sm font-medium transition-colors">
+                        View on GitHub
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                            <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                        </svg>
+                    </a>
+                </div>
             </div>
-        </div>
         </div>{{-- /x-data --}}
     @endif
 
