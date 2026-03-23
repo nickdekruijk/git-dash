@@ -6,9 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class GithubConnection extends Model
 {
-    protected $fillable = ['name', 'label', 'token'];
+    protected $fillable = ['name', 'label', 'token', 'is_default'];
 
-    protected $casts = [
-        'token' => 'encrypted',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'token' => 'encrypted',
+            'is_default' => 'boolean',
+        ];
+    }
 }

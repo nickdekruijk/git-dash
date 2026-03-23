@@ -455,6 +455,11 @@
                                         <div class="flex items-center gap-2">
                                             <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ $conn->label }}</span>
                                             <span class="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded px-1.5 py-0.5 font-mono">{{ $conn->name }}</span>
+                                            @if ($conn->is_default)
+                                                <span class="text-xs bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 rounded px-1.5 py-0.5">
+                                                    Default
+                                                </span>
+                                            @endif
                                             @if ($hasTokens)
                                                 <span class="text-xs bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded px-1.5 py-0.5">
                                                     {{ $shareTokens->where('connection', $conn->name)->count() }} share {{ Str::plural('link', $shareTokens->where('connection', $conn->name)->count()) }}
@@ -463,6 +468,12 @@
                                         </div>
                                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Added {{ $conn->created_at->diffForHumans() }}</p>
                                     </div>
+                                    @if (!$conn->is_default && $connections->count() > 1)
+                                        <button type="button" wire:click="setDefaultConnection({{ $conn->id }})"
+                                            class="text-xs text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors">
+                                            Set as default
+                                        </button>
+                                    @endif
                                     <button type="button" wire:click="editConnection({{ $conn->id }})"
                                         class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline transition-colors">
                                         Edit

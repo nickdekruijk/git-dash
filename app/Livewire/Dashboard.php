@@ -2,14 +2,14 @@
 
 namespace App\Livewire;
 
+use App\Models\GithubConnection;
+use App\Models\ShareToken;
 use Carbon\Carbon;
 use Github\ResultPager;
 use GrahamCampbell\GitHub\Facades\GitHub;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
-use App\Models\GithubConnection;
-use App\Models\ShareToken;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -26,12 +26,16 @@ class Dashboard extends Component
 
     #[Url(as: 'connection', except: '')]
     public string $connection = '';
+
     #[Url(as: 'from', except: '')]
     public string $from = '';
+
     #[Url(as: 'to', except: '')]
     public string $to = '';
+
     #[Url(as: 'view', except: 'timeline')]
     public string $view = 'timeline';
+
     public string $preset = '';
 
     /** When set, the user can only view this connection (share link mode). */
@@ -42,17 +46,23 @@ class Dashboard extends Component
 
     /** New token form fields */
     public string $newTokenLabel = '';
+
     public string $newTokenConnection = '';
+
     public string $newTokenRepository = '';
 
     /** New connection form fields */
     public string $newConnName = '';
+
     public string $newConnLabel = '';
+
     public string $newConnToken = '';
 
     /** Edit connection fields */
     public ?int $editConnId = null;
+
     public string $editConnLabel = '';
+
     public string $editConnToken = '';
 
     /** Currently selected commit detail (null = modal closed). */
@@ -77,13 +87,14 @@ class Dashboard extends Component
             $this->lockedRepository = $lockedRepository;
             $this->connection = $lockedConnection;
         } else {
-            // Default to first available DB connection (only if not already set via URL)
-            $first = GithubConnection::orderBy('name')->value('name');
-            if ($first) {
+            // Default to the marked default connection, falling back to first alphabetically
+            $default = GithubConnection::where('is_default', true)->value('name')
+                ?? GithubConnection::orderBy('name')->value('name');
+            if ($default) {
                 if ($isDataPage && ! $this->connection) {
-                    $this->connection = $first;
+                    $this->connection = $default;
                 }
-                $this->newTokenConnection = $this->connection ?: $first;
+                $this->newTokenConnection = $this->connection ?: $default;
             } elseif ($isDataPage) {
                 // No connections yet — land on the Connections tab
                 $this->view = 'connections';
@@ -141,10 +152,10 @@ class Dashboard extends Component
     public function createToken(): void
     {
         ShareToken::create([
-            'token'      => Str::random(32),
+            'token' => Str::random(32),
             'connection' => $this->newTokenConnection,
             'repository' => $this->newTokenRepository ?: null,
-            'label'      => $this->newTokenLabel ?: null,
+            'label' => $this->newTokenLabel ?: null,
         ]);
 
         $this->newTokenLabel = '';
@@ -170,7 +181,7 @@ class Dashboard extends Component
         $client = GitHub::connection($this->newTokenConnection);
         $pager = new ResultPager($client);
 
-        $cacheKey = 'repos:' . $this->newTokenConnection;
+        $cacheKey = 'repos:'.$this->newTokenConnection;
 
         return Cache::remember($cacheKey, now()->addHour(), function () use ($pager, $client) {
             return collect($pager->fetchAll($client->api('me'), 'repositories', ['all', 'full_name', 'asc']))
@@ -196,13 +207,13 @@ class Dashboard extends Component
     public function createConnection(): void
     {
         $this->validate([
-            'newConnName'  => 'required|alpha_dash|unique:github_connections,name',
+            'newConnName' => 'required|alpha_dash|unique:github_connections,name',
             'newConnLabel' => 'required|string|max:100',
             'newConnToken' => 'required|string',
         ]);
 
         GithubConnection::create([
-            'name'  => $this->newConnName,
+            'name' => $this->newConnName,
             'label' => $this->newConnLabel,
             'token' => $this->newConnToken,
         ]);
@@ -247,15 +258,32 @@ class Dashboard extends Component
         unset($this->connections);
     }
 
+    /** Mark a connection as the default (clears the flag on all others). */
+    public function setDefaultConnection(int $id): void
+    {
+        GithubConnection::where('id', '!=', $id)->update(['is_default' => false]);
+        GithubConnection::where('id', $id)->update(['is_default' => true]);
+        unset($this->connections);
+    }
+
     /** Delete a GitHub connection by id. */
     public function deleteConnection(int $id): void
     {
+        $wasDefault = GithubConnection::where('id', $id)->value('is_default');
+
         GithubConnection::destroy($id);
         unset($this->connections);
 
-        // Reset to first remaining connection
-        $first = GithubConnection::orderBy('name')->value('name');
-        $this->connection = $first ?? '';
+        // If the deleted connection was the default, assign the flag to the next one
+        if ($wasDefault) {
+            $next = GithubConnection::orderBy('name')->first();
+            $next?->update(['is_default' => true]);
+        }
+
+        // Reset to the default (or first remaining) connection
+        $default = GithubConnection::where('is_default', true)->value('name')
+            ?? GithubConnection::orderBy('name')->value('name');
+        $this->connection = $default ?? '';
         $this->newTokenConnection = $this->connection;
     }
 
@@ -272,7 +300,7 @@ class Dashboard extends Component
         // The full commit API response omits repository info, so we inject it.
         $commit['repository'] = [
             'full_name' => $repo,
-            'html_url'  => 'https://github.com/' . $repo,
+            'html_url' => 'https://github.com/'.$repo,
         ];
 
         $this->selectedCommit = $commit;
@@ -299,7 +327,7 @@ class Dashboard extends Component
 
         $this->bootGitHubConnection($this->connection);
 
-        return Cache::remember('username:' . $this->connection, now()->addHour(), function () {
+        return Cache::remember('username:'.$this->connection, now()->addHour(), function () {
             return GitHub::connection($this->connection)->currentUser()->show()['login'];
         });
     }
@@ -320,7 +348,7 @@ class Dashboard extends Component
             $query .= " repo:{$this->lockedRepository}";
         }
 
-        $cacheKey = 'commits:' . $this->connection . ':' . md5($query);
+        $cacheKey = 'commits:'.$this->connection.':'.md5($query);
 
         return Cache::remember($cacheKey, now()->addHour(), function () use ($pager, $client, $query) {
             return collect($pager->fetchAll($client->api('search'), 'commits', [
@@ -335,9 +363,9 @@ class Dashboard extends Component
     public function commitsByDate(): Collection
     {
         return $this->items
-            ->groupBy(fn(array $item) => substr($item['commit']['author']['date'], 0, 10))
+            ->groupBy(fn (array $item) => substr($item['commit']['author']['date'], 0, 10))
             ->sortKeysDesc()
-            ->map(fn(Collection $dayCommits) => $this->buildDayData($dayCommits));
+            ->map(fn (Collection $dayCommits) => $this->buildDayData($dayCommits));
     }
 
     #[Computed]
@@ -362,17 +390,17 @@ class Dashboard extends Component
     public function timeByRepo(): Collection
     {
         return collect($this->commitsByDate)
-            ->flatMap(fn(array $dayData) => $dayData['sessions'])
-            ->groupBy(fn(array $session) => $session['commits']->first()['repository']['full_name'])
-            ->map(fn(Collection $sessions, string $repoName) => [
+            ->flatMap(fn (array $dayData) => $dayData['sessions'])
+            ->groupBy(fn (array $session) => $session['commits']->first()['repository']['full_name'])
+            ->map(fn (Collection $sessions, string $repoName) => [
                 'full_name' => $repoName,
                 'html_url' => $sessions->first()['commits']->first()['repository']['html_url'],
                 'minutes' => $sessions->sum('minutes'),
-                'commit_count' => $sessions->sum(fn(array $s) => $s['commits']->count()),
+                'commit_count' => $sessions->sum(fn (array $s) => $s['commits']->count()),
                 'session_count' => $sessions->count(),
                 'commits' => $sessions
-                    ->flatMap(fn(array $s) => $s['commits'])
-                    ->sortByDesc(fn(array $c) => $c['commit']['author']['date'])
+                    ->flatMap(fn (array $s) => $s['commits'])
+                    ->sortByDesc(fn (array $c) => $c['commit']['author']['date'])
                     ->values(),
             ])
             ->sortByDesc('minutes')
@@ -384,13 +412,13 @@ class Dashboard extends Component
         $needsData = in_array($this->view, ['timeline', 'repositories']);
 
         return view('livewire.dashboard', [
-            'commitsByDate'       => $needsData ? $this->commitsByDate : collect(),
-            'timeByRepo'          => $needsData ? $this->timeByRepo : collect(),
-            'totalCommits'        => $needsData ? $this->totalCommits : 0,
-            'totalRepos'          => $needsData ? $this->totalRepos : 0,
-            'totalMinutes'        => $needsData ? $this->totalMinutes : 0,
-            'connections'         => $this->connections,
-            'shareTokens'         => $this->lockedConnection === null ? $this->shareTokens : collect(),
+            'commitsByDate' => $needsData ? $this->commitsByDate : collect(),
+            'timeByRepo' => $needsData ? $this->timeByRepo : collect(),
+            'totalCommits' => $needsData ? $this->totalCommits : 0,
+            'totalRepos' => $needsData ? $this->totalRepos : 0,
+            'totalMinutes' => $needsData ? $this->totalMinutes : 0,
+            'connections' => $this->connections,
+            'shareTokens' => $this->lockedConnection === null ? $this->shareTokens : collect(),
         ]);
     }
 
@@ -403,10 +431,10 @@ class Dashboard extends Component
 
         $token = GithubConnection::where('name', $name)->value('token');
 
-        config(['github.connections.' . $name => [
+        config(['github.connections.'.$name => [
             'method' => 'token',
-            'token'  => $token,
-            'cache'  => 'main',
+            'token' => $token,
+            'cache' => 'main',
         ]]);
     }
 
@@ -418,7 +446,7 @@ class Dashboard extends Component
     private function buildDayData(Collection $commits): array
     {
         $sorted = $commits
-            ->sortBy(fn(array $c) => $c['commit']['author']['date'])
+            ->sortBy(fn (array $c) => $c['commit']['author']['date'])
             ->values();
 
         // Split into sessions on time gap OR repository change
@@ -466,7 +494,7 @@ class Dashboard extends Component
 
         return [
             'total_minutes' => $totalMinutes,
-            'sessions'      => $sessionsData,
+            'sessions' => $sessionsData,
         ];
     }
 
@@ -476,30 +504,30 @@ class Dashboard extends Component
         $today = now()->startOfDay();
 
         return match ($preset) {
-            'this_week'    => [
+            'this_week' => [
                 $today->clone()->startOfWeek(Carbon::MONDAY)->toDateString(),
                 $today->toDateString(),
             ],
-            'last_week'    => [
+            'last_week' => [
                 $today->clone()->subWeek()->startOfWeek(Carbon::MONDAY)->toDateString(),
                 $today->clone()->subWeek()->endOfWeek(Carbon::SUNDAY)->toDateString(),
             ],
-            'this_month'   => [
+            'this_month' => [
                 $today->clone()->startOfMonth()->toDateString(),
                 $today->toDateString(),
             ],
-            'last_month'   => [
+            'last_month' => [
                 $today->clone()->subMonthNoOverflow()->startOfMonth()->toDateString(),
                 $today->clone()->subMonthNoOverflow()->endOfMonth()->toDateString(),
             ],
-            'last_7'       => [$today->clone()->subDays(6)->toDateString(), $today->toDateString()],
-            'last_30'      => [$today->clone()->subDays(29)->toDateString(), $today->toDateString()],
-            'last_90'      => [$today->clone()->subDays(89)->toDateString(), $today->toDateString()],
-            'this_year'    => [
+            'last_7' => [$today->clone()->subDays(6)->toDateString(), $today->toDateString()],
+            'last_30' => [$today->clone()->subDays(29)->toDateString(), $today->toDateString()],
+            'last_90' => [$today->clone()->subDays(89)->toDateString(), $today->toDateString()],
+            'this_year' => [
                 $today->clone()->startOfYear()->toDateString(),
                 $today->toDateString(),
             ],
-            'last_year'    => [
+            'last_year' => [
                 $today->clone()->subYear()->startOfYear()->toDateString(),
                 $today->clone()->subYear()->endOfYear()->toDateString(),
             ],
@@ -511,7 +539,7 @@ class Dashboard extends Component
                 $today->clone()->subQuarter()->startOfQuarter()->toDateString(),
                 $today->clone()->subQuarter()->endOfQuarter()->toDateString(),
             ],
-            default        => [$this->from, $this->to],
+            default => [$this->from, $this->to],
         };
     }
 }
