@@ -314,9 +314,8 @@ class Dashboard extends Component
 
         try {
             $commit = $client->api('repo')->commits()->show($owner, $repoName, $sha);
-        } catch (\Github\Exception\RuntimeException $e) {
+        } catch (\Github\Exception\RuntimeException) {
             $this->credentialError = $this->connection;
-            $this->view = 'connections';
 
             return;
         }
@@ -351,15 +350,21 @@ class Dashboard extends Component
 
         $this->bootGitHubConnection($this->connection);
 
-        return Cache::remember('username:'.$this->connection, now()->addHour(), function () {
-            return GitHub::connection($this->connection)->currentUser()->show()['login'];
-        });
+        try {
+            return Cache::remember('username:'.$this->connection, now()->addHour(), function () {
+                return GitHub::connection($this->connection)->currentUser()->show()['login'];
+            });
+        } catch (\Github\Exception\RuntimeException) {
+            $this->credentialError = $this->connection;
+
+            return '';
+        }
     }
 
     #[Computed]
     public function items(): Collection
     {
-        if (! $this->connection || ! $this->from || ! $this->to) {
+        if (! $this->connection || ! $this->from || ! $this->to || $this->credentialError) {
             return collect();
         }
 
@@ -435,31 +440,12 @@ class Dashboard extends Component
     {
         $needsData = in_array($this->view, ['timeline', 'repositories']);
 
-        $commitsByDate = collect();
-        $timeByRepo = collect();
-        $totalCommits = 0;
-        $totalRepos = 0;
-        $totalMinutes = 0;
-
-        if ($needsData) {
-            try {
-                $commitsByDate = $this->commitsByDate;
-                $timeByRepo = $this->timeByRepo;
-                $totalCommits = $this->totalCommits;
-                $totalRepos = $this->totalRepos;
-                $totalMinutes = $this->totalMinutes;
-            } catch (\Github\Exception\RuntimeException $e) {
-                $this->credentialError = $this->connection;
-                $this->view = 'connections';
-            }
-        }
-
         return view('livewire.dashboard', [
-            'commitsByDate' => $commitsByDate,
-            'timeByRepo' => $timeByRepo,
-            'totalCommits' => $totalCommits,
-            'totalRepos' => $totalRepos,
-            'totalMinutes' => $totalMinutes,
+            'commitsByDate' => $needsData ? $this->commitsByDate : collect(),
+            'timeByRepo' => $needsData ? $this->timeByRepo : collect(),
+            'totalCommits' => $needsData ? $this->totalCommits : 0,
+            'totalRepos' => $needsData ? $this->totalRepos : 0,
+            'totalMinutes' => $needsData ? $this->totalMinutes : 0,
             'connections' => $this->connections,
             'shareTokens' => $this->lockedConnection === null ? $this->shareTokens : collect(),
         ]);

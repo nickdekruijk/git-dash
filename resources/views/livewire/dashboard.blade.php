@@ -98,6 +98,19 @@
 
     <main class="max-w-5xl mx-auto px-4 py-6" wire:loading.class="opacity-50">
 
+        {{-- Bad credentials warning (shown on all tabs) --}}
+        @if ($credentialError)
+            <div class="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 h-4 w-4 shrink-0 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                </svg>
+                <div>
+                    <p class="text-sm font-medium text-amber-700 dark:text-amber-400">Invalid GitHub credentials</p>
+                    <p class="text-sm text-amber-600 dark:text-amber-500">The token for <span class="font-mono font-semibold">{{ $credentialError }}</span> was rejected by GitHub. <a href="{{ route('connections') }}" class="underline font-medium">Update it on the Connections page.</a></p>
+                </div>
+            </div>
+        @endif
+
         @php
             /** Format minutes as e.g. "1h 30m" or "45m" */
             $fmt = function (int $minutes): string {
@@ -376,19 +389,6 @@
 
         {{-- ── Connections tab (owner only) ── --}}
         @if ($view === 'connections')
-
-            {{-- Bad credentials warning --}}
-            @if ($credentialError)
-                <div class="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 h-4 w-4 shrink-0 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
-                    </svg>
-                    <div>
-                        <p class="text-sm font-medium text-amber-700 dark:text-amber-400">Invalid GitHub credentials</p>
-                        <p class="text-sm text-amber-600 dark:text-amber-500">The token for connection <span class="font-mono font-semibold">{{ $credentialError }}</span> was rejected by GitHub. Please update it below.</p>
-                    </div>
-                </div>
-            @endif
 
             {{-- Add new connection --}}
             <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 mb-4">
