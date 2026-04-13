@@ -27,6 +27,9 @@ class Dashboard extends Component
     #[Url(as: 'connection', except: '')]
     public string $connection = '';
 
+    /** Name of the connection whose credentials were rejected by GitHub (null = no error). */
+    public ?string $credentialError = null;
+
     #[Url(as: 'from', except: '')]
     public string $from = '';
 
@@ -212,6 +215,12 @@ class Dashboard extends Component
             'newConnToken' => 'required|string',
         ]);
 
+        if (! $this->validateGitHubToken($this->newConnToken)) {
+            $this->addError('newConnToken', 'GitHub rejected this token. Please check it and try again.');
+
+            return;
+        }
+
         GithubConnection::create([
             'name' => $this->newConnName,
             'label' => $this->newConnLabel,
@@ -219,6 +228,7 @@ class Dashboard extends Component
         ]);
 
         $this->newConnName = $this->newConnLabel = $this->newConnToken = '';
+        $this->credentialError = null;
         unset($this->connections);
     }
 
@@ -246,6 +256,12 @@ class Dashboard extends Component
             'editConnToken' => 'nullable|string',
         ]);
 
+        if ($this->editConnToken !== '' && ! $this->validateGitHubToken($this->editConnToken)) {
+            $this->addError('editConnToken', 'GitHub rejected this token. Please check it and try again.');
+
+            return;
+        }
+
         $conn = GithubConnection::findOrFail($this->editConnId);
         $conn->label = $this->editConnLabel;
         if ($this->editConnToken !== '') {
@@ -255,6 +271,7 @@ class Dashboard extends Component
 
         $this->editConnId = null;
         $this->editConnLabel = $this->editConnToken = '';
+        $this->credentialError = null;
         unset($this->connections);
     }
 
@@ -295,7 +312,14 @@ class Dashboard extends Component
 
         [$owner, $repoName] = explode('/', $repo, 2);
 
-        $commit = $client->api('repo')->commits()->show($owner, $repoName, $sha);
+        try {
+            $commit = $client->api('repo')->commits()->show($owner, $repoName, $sha);
+        } catch (\Github\Exception\RuntimeException $e) {
+            $this->credentialError = $this->connection;
+            $this->view = 'connections';
+
+            return;
+        }
 
         // The full commit API response omits repository info, so we inject it.
         $commit['repository'] = [
@@ -411,15 +435,53 @@ class Dashboard extends Component
     {
         $needsData = in_array($this->view, ['timeline', 'repositories']);
 
+        $commitsByDate = collect();
+        $timeByRepo = collect();
+        $totalCommits = 0;
+        $totalRepos = 0;
+        $totalMinutes = 0;
+
+        if ($needsData) {
+            try {
+                $commitsByDate = $this->commitsByDate;
+                $timeByRepo = $this->timeByRepo;
+                $totalCommits = $this->totalCommits;
+                $totalRepos = $this->totalRepos;
+                $totalMinutes = $this->totalMinutes;
+            } catch (\Github\Exception\RuntimeException $e) {
+                $this->credentialError = $this->connection;
+                $this->view = 'connections';
+            }
+        }
+
         return view('livewire.dashboard', [
-            'commitsByDate' => $needsData ? $this->commitsByDate : collect(),
-            'timeByRepo' => $needsData ? $this->timeByRepo : collect(),
-            'totalCommits' => $needsData ? $this->totalCommits : 0,
-            'totalRepos' => $needsData ? $this->totalRepos : 0,
-            'totalMinutes' => $needsData ? $this->totalMinutes : 0,
+            'commitsByDate' => $commitsByDate,
+            'timeByRepo' => $timeByRepo,
+            'totalCommits' => $totalCommits,
+            'totalRepos' => $totalRepos,
+            'totalMinutes' => $totalMinutes,
             'connections' => $this->connections,
             'shareTokens' => $this->lockedConnection === null ? $this->shareTokens : collect(),
         ]);
+    }
+
+    /** Test a raw token against the GitHub API. Returns false if credentials are rejected. */
+    private function validateGitHubToken(string $token): bool
+    {
+        $tempName = '_validate_'.uniqid();
+
+        config(['github.connections.'.$tempName => [
+            'method' => 'token',
+            'token' => $token,
+        ]]);
+
+        try {
+            GitHub::connection($tempName)->currentUser()->show();
+
+            return true;
+        } catch (\Github\Exception\RuntimeException) {
+            return false;
+        }
     }
 
     /** Configure the Graham-Campbell GitHub manager from DB at runtime. */
