@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f4a1ca771d6bdefe0b295af1fed2cadf",
+    "content-hash": "74001db57c26d10c94848efe71af71eb",
     "packages": [
         {
             "name": "brick/math",
@@ -2922,6 +2922,71 @@
                 "source": "https://github.com/nette/utils/tree/v4.1.6"
             },
             "time": "2026-10-20T17:07:56+00:00"
+        },
+        {
+            "name": "nickdekruijk/laravel-beacon",
+            "version": "1.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nickdekruijk/laravel-beacon.git",
+                "reference": "e65fc9ad1c557850bd505e5db0cc28b991566460"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nickdekruijk/laravel-beacon/zipball/e65fc9ad1c557850bd505e5db0cc28b991566460",
+                "reference": "e65fc9ad1c557850bd505e5db0cc28b991566460",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^7.8|^8.0",
+                "illuminate/http": "^12.0|^13.0",
+                "illuminate/support": "^12.0|^13.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "larastan/larastan": "^3.0",
+                "laravel/pint": "^1.18",
+                "orchestra/testbench": "^10.0|^11.0",
+                "phpunit/phpunit": "^11.0|^12.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "NickDeKruijk\\Beacon\\ServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "NickDeKruijk\\Beacon\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nick de Kruijk",
+                    "email": "git@nickdekruijk.nl"
+                }
+            ],
+            "description": "Reports the exceptions of a Laravel site to your own dashboard, without a key: scrubbed request data, no third party",
+            "keywords": [
+                "error tracking",
+                "exceptions",
+                "laravel",
+                "monitoring",
+                "privacy",
+                "self-hosted"
+            ],
+            "support": {
+                "issues": "https://github.com/nickdekruijk/laravel-beacon/issues",
+                "source": "https://github.com/nickdekruijk/laravel-beacon/tree/1.2.0"
+            },
+            "time": "2026-11-20T09:46:58+00:00",
+            "published-time": "2026-11-20T09:47:10+00:00"
         },
         {
             "name": "nikic/php-parser",
@@ -11634,5 +11699,5 @@
         "php": "^8.2"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }
